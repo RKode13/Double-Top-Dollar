@@ -39,6 +39,7 @@ android {
 
 def copyGame = tasks.register("copyGame", Copy) {
     from("../../index.html")
+    from("../../anton.woff2")   // downloaded by the GitHub build; skipped if missing
     into("$buildDir/gameAssets")
 }
 preBuild.dependsOn(copyGame)

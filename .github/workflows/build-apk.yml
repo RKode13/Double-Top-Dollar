@@ -22,6 +22,9 @@ jobs:
         with:
           gradle-version: "8.11.1"
 
+      - name: Download the display font (Anton, SIL Open Font License)
+        run: curl -fsSL -o anton.woff2 https://cdn.jsdelivr.net/npm/@fontsource/anton@5.0.20/files/anton-latin-400-normal.woff2 || echo "font download failed; app uses the fallback font"
+
       - name: Build the app
         working-directory: android
         run: gradle assembleDebug --no-daemon
