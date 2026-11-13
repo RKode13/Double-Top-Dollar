@@ -1,0 +1,46 @@
+name: Build Android APK
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.11.1"
+
+      - name: Build the app
+        working-directory: android
+        run: gradle assembleDebug --no-daemon
+
+      - name: Name the file
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk DoubleDollarDeal.apk
+
+      - name: Save build (Actions tab)
+        uses: actions/upload-artifact@v4
+        with:
+          name: DoubleDollarDeal-apk
+          path: DoubleDollarDeal.apk
+
+      - name: Publish to the "latest" download page (Releases)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest DoubleDollarDeal.apk \
+            --target "${{ github.sha }}" --prerelease \
+            --title "Double Dollar Deal — latest build" \
+            --notes "On your Android phone: download DoubleDollarDeal.apk, open it, and tap Install."

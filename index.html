@@ -373,10 +373,13 @@ function chooseVoice(){ if (!('speechSynthesis' in window)) return;
   voicePick = vs.find(v=>/david|guy|daniel|alex|fred|male|google us english/i.test(v.name)) || vs[0]; }
 if ('speechSynthesis' in window){ chooseVoice(); speechSynthesis.onvoiceschanged=chooseVoice; }
 function say(text,{rate=1.05,pitch=.85}={}){
-  if (!S.all || !S.voice || !('speechSynthesis' in window)) return;
+  if (!S.all || !S.voice) return;
+  if (window.AndroidVoice){ AndroidVoice.speak(text); return; }   // Android app: phone's text-to-speech
+  if (!('speechSynthesis' in window)) return;
   speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text);
   if (voicePick) u.voice=voicePick; u.rate=rate; u.pitch=pitch; speechSynthesis.speak(u);
 }
+function stopVoice(){ if (window.AndroidVoice) AndroidVoice.stop(); else if ('speechSynthesis' in window) speechSynthesis.cancel(); }
 const sleep = ms => new Promise(r=>setTimeout(r,ms));
 const money = c => '$' + (c/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const spoken = c => { const d=Math.floor(c/100), k=c%100; return (d? d+' dollar'+(d===1?'':'s'):'') + (d&&k?' and ':'') + (k? k+' cents':'') || 'zero'; };
@@ -695,7 +698,7 @@ $('sheet').addEventListener('click',e=>{
   if (t.dataset.tab){ tab=t.dataset.tab; drawSheet(); }
   else if (t.dataset.bet){ pendBet=+t.dataset.bet; drawSheet(); SFX.button(); }
   else if (t.dataset.auto){ pendAuto=+t.dataset.auto; drawSheet(); SFX.button(); }
-  else if (t.dataset.tog){ const k=t.dataset.tog; S[k]=!S[k]; if((k==='all'||k==='voice')&&!S[k]&&'speechSynthesis' in window) speechSynthesis.cancel();
+  else if (t.dataset.tog){ const k=t.dataset.tog; S[k]=!S[k]; if((k==='all'||k==='voice')&&!S[k]) stopVoice();
     save(); drawSheet(); audio(); SFX.button(); if (k==='voice'&&S.voice) say('Voice on!'); }
 });
 $('sClose').onclick=closeSheet;
@@ -714,6 +717,10 @@ document.addEventListener('keydown',e=>{
 });
 
 buildReels(); sizeReels(); buildBulbs(); renderBoard(); render(); msgCycle(IDLE_MSGS);
+// Android app hooks: Back closes the settings panel; leaving the app quiets the sound
+window.onAndroidBack = () => { if (!$('sheet').classList.contains('hide')){ closeSheet(); return true; } return false; };
+window.onAndroidPause = () => { autoLeft=0; render(); if (S.ctx) S.ctx.suspend(); };
+document.addEventListener('visibilitychange', () => { if (!document.hidden && S.ctx) S.ctx.resume(); });
 addEventListener('resize',()=>{ sizeReels(); buildBulbs(); clearWins(); });
 </script>
 </body>

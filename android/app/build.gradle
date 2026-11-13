@@ -1,0 +1,44 @@
+plugins {
+    id "com.android.application"
+}
+
+android {
+    namespace "com.doubledollardeal.slots"
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.doubledollardeal.slots"
+        minSdk 24
+        targetSdk 35
+        versionCode 1
+        versionName "1.0"
+    }
+
+    // A fixed debug key (committed on purpose, it is not a secret) so every
+    // new build installs right over the old one and keeps the saved balance.
+    signingConfigs {
+        debug {
+            storeFile file("debug.keystore")
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
+    }
+
+    // The game is the index.html at the top of the repository (the same file
+    // GitHub Pages serves). It is copied into the app when the app is built.
+    sourceSets {
+        main.assets.srcDirs = ["$buildDir/gameAssets"]
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+def copyGame = tasks.register("copyGame", Copy) {
+    from("../../index.html")
+    into("$buildDir/gameAssets")
+}
+preBuild.dependsOn(copyGame)
