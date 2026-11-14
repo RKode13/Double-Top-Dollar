@@ -181,6 +181,41 @@ body{color:var(--white);font-family:AntonLocal,Anton,"Arial Black",Impact,system
 .flash.on{opacity:1}
 .coin{position:fixed;left:0;top:0;z-index:16;pointer-events:none;width:24px;height:24px;border-radius:50%;
   background:radial-gradient(circle at 35% 30%,#fff7c2,#ffd23f 45%,#a87000);box-shadow:0 0 6px #ffd23f,inset 0 0 0 2px #c98a00}
+
+/* =================== ARTWORK SKIN =================== */
+body{flex-direction:column;align-items:center}
+.cab{padding:0;border-radius:0;background:none;box-shadow:none;margin:6px 0 0;
+  border-style:solid;border-width:34px 32px 26px 34px;
+  border-image:url(art/cabinet.webp) 115 110 85 115 fill / 34px 32px 26px 34px stretch}
+.cab .bulbs{inset:0}
+.bulb{width:9px;height:9px;margin:-4.5px 0 0 -4.5px;background:#0008;box-shadow:none}
+.logo{position:relative;margin:2px 4px 0}
+.logo img{display:block;width:100%;filter:drop-shadow(0 4px 4px #000c) drop-shadow(0 0 10px #19c95b55)}
+.board{margin-top:6px}
+.star{clip-path:none;background:none;width:clamp(56px,16vw,72px);aspect-ratio:auto}
+.star img{display:block;width:100%;filter:drop-shadow(0 3px 3px #000a)}
+.star.lit{filter:drop-shadow(0 0 12px #ffd23f) drop-shadow(0 0 4px #fff)!important}
+.plaque{padding:0;border-radius:0;background:url(art/plaque.webp) center/100% 100% no-repeat;box-shadow:none;aspect-ratio:700/260;filter:drop-shadow(0 4px 4px #000a)}
+.plaque .v{position:absolute;left:13%;top:40%;width:73.9%;height:42.3%;margin:0;display:flex;align-items:center;justify-content:center;
+  background:none;box-shadow:none;font-size:clamp(17px,5.6vw,26px)}
+.plaque.lit{box-shadow:none;filter:drop-shadow(0 0 14px #ffd23f)!important}
+.reelbox{border-style:solid;border-width:16px 18px 16px 18px;border-image:url(art/reelframe.webp) 55 62 56 62 / 16px 18px 16px 18px stretch;
+  border-radius:0;padding:6px 14px;background:var(--chrome);background-clip:padding-box;box-shadow:0 8px 18px #000c}
+.lmark{width:13px;height:13px;margin-top:-6.5px;font-size:9px}
+.cell img{display:block;max-width:90%;max-height:92%;filter:drop-shadow(0 3px 3px #0007)}
+.mini img{max-width:100%;max-height:100%;display:block}
+.spin{background:url(art/spin.webp) center/contain no-repeat;box-shadow:none;width:104px;height:104px}
+.spin .i,.spin .lbl{text-shadow:0 2px 3px #000}
+.spin:not(:disabled){filter:drop-shadow(0 0 10px #8a4dff99)}
+.bbtn{aspect-ratio:600/198;padding:0;display:flex;align-items:center;justify-content:center;box-shadow:none!important;border-radius:0}
+.bbtn.take{background:url(art/btn_red.webp) center/100% 100% no-repeat}
+.bbtn.try,.bbtn.go{background:url(art/btn_blue.webp) center/100% 100% no-repeat}
+.bbtn.go{aspect-ratio:auto;height:64px;background-size:100% 100%}
+.bbtn.hint{animation:hint2 1s infinite}
+@keyframes hint2{50%{filter:brightness(1.25) drop-shadow(0 0 12px #fff)}}
+.console{width:min(460px,100vw);padding:10px 14px 12px;margin:0 0 16px;border-radius:0 0 26px 26px;
+  background:linear-gradient(180deg,#24242c,#0b0b10);box-shadow:0 0 0 3px #c9c9d6,0 0 0 5px #4a4a56,0 14px 30px #000}
+.console .meters{margin-top:4px}
 </style>
 </head>
 <body>
@@ -200,15 +235,13 @@ body{color:var(--white);font-family:AntonLocal,Anton,"Arial Black",Impact,system
 
 <div class="cab" id="cab">
   <div class="bulbs" id="bulbs"></div>
-  <div class="marquee">
-    <div class="title"><div class="l1">DOUBLE DOLLAR</div><div class="l2"><span class="st">★</span> DEAL <span class="st">★</span></div></div>
-  </div>
+  <div class="logo"><img src="art/logo.webp" alt="Double Dollar Deal"></div>
 
   <div class="board" id="board">
     <div class="toprow">
-      <div class="star" id="mL"><b>2X</b></div>
-      <div class="plaque" id="tTop" data-v="100"><div class="lb">TOP OFFER</div><div class="v">—</div></div>
-      <div class="star" id="mR"><b>2X</b></div>
+      <div class="star" id="mL"><img src="art/star.webp" alt="2X"></div>
+      <div class="plaque" id="tTop" data-v="100"><div class="v">—</div></div>
+      <div class="star" id="mR"><img src="art/star.webp" alt="2X"></div>
     </div>
     <div class="grid9" id="grid9"></div>
   </div>
@@ -222,6 +255,8 @@ body{color:var(--white);font-family:AntonLocal,Anton,"Arial Black",Impact,system
     </div>
   </div>
 
+</div>
+<div class="console">
   <div class="meters">
     <div class="meter"><div class="v" id="mBet">$0.50</div><div class="lb">TOTAL BET</div></div>
     <div class="meter"><div class="v led" id="mWin">&nbsp;</div><div class="lb">WIN</div></div>
@@ -440,13 +475,18 @@ const spoken = c => { const d=Math.floor(c/100), k=c%100; return (d? d+' dollar'
    LIGHTS — bulbs chase around the whole cabinet
    ================================================================= */
 const bulbs=[];
+// light-bulb spots on the painted cabinet (percent of the image), mapped through the stretched frame
+const BULBS = [[2.28, 45.89], [2.34, 41.52], [2.41, 37.2], [2.43, 32.84], [2.45, 28.52], [2.57, 24.21], [2.6, 20.61], [2.65, 16.72], [2.65, 12.89], [2.63, 8.67], [11.18, 0.77], [19.26, 4.77], [21.16, 4.07], [21.1, 1.93], [21.38, 1.16], [30.12, 1.29], [38.34, 5.28], [38.94, 1.3], [42.03, 2.71], [45.64, 0.9], [60.89, 1.17], [63.85, 4.16], [69.71, 1.28], [71.19, 4.15], [78.46, 1.31], [78.51, 4.17], [97.26, 8.67], [97.32, 12.9], [97.34, 16.75], [97.36, 20.64], [97.42, 24.19], [97.47, 28.54], [97.46, 32.84], [97.46, 37.19], [97.61, 41.53], [97.66, 45.9], [97.75, 54.37], [97.76, 58.79], [97.9, 63.17], [97.91, 67.66], [93.63, 69.04], [97.99, 71.78], [93.61, 73.61], [98.05, 76.15], [93.62, 78.2], [93.61, 82.81], [93.66, 87.45], [93.69, 92.19], [93.72, 96.82], [84.02, 96.49], [75.42, 96.52], [66.96, 96.5], [58.44, 96.49], [49.96, 96.51], [41.43, 96.49], [32.92, 96.5], [24.43, 96.5], [15.86, 96.5], [6.16, 96.81], [6.14, 92.15], [6.23, 87.44], [6.22, 82.81], [6.29, 78.25], [1.81, 76.17], [6.29, 73.63], [2.0, 71.79], [6.37, 69.03], [6.98, 68.06], [1.91, 67.66], [2.0, 63.18], [2.12, 58.8], [2.08, 54.38]];
+const CAB_IMG=[676,1258], CAB_SLICE=[115,110,85,115];   // top, right, bottom, left (image pixels)
 function buildBulbs(){
-  const host=$('bulbs'); host.innerHTML=''; bulbs.length=0;
-  const b=host.getBoundingClientRect(), W=b.width, H=b.height, ins=7, per=2*(W+H), n=Math.max(40,Math.round(per/22));
-  for (let i=0;i<n;i++){ let d=i/n*per,x,y;
-    if (d<W){x=d;y=0}else if((d-=W)<H){x=W;y=d}else if((d-=H)<W){x=W-d;y=H}else{d-=W;x=0;y=H-d}
-    const e=document.createElement('div'); e.className='bulb'; e.style.left=Math.min(W-ins,Math.max(ins,x))+'px'; e.style.top=Math.min(H-ins,Math.max(ins,y))+'px';
-    host.appendChild(e); bulbs.push(e); }
+  const cab=$('cab'), host=$('bulbs'), cs=getComputedStyle(cab);
+  const T=parseFloat(cs.borderTopWidth), R=parseFloat(cs.borderRightWidth), B=parseFloat(cs.borderBottomWidth), L=parseFloat(cs.borderLeftWidth);
+  const W=cab.offsetWidth, H=cab.offsetHeight, [iw,ih]=CAB_IMG, [st,sr,sb,sl]=CAB_SLICE;
+  const map=(v,n,a,b,A,Bn,N)=> v<a ? v*A/a : v>n-b ? N-(n-v)*Bn/b : A+(v-a)*(N-A-Bn)/(n-a-b);
+  host.innerHTML=''; bulbs.length=0;
+  BULBS.forEach(([px,py])=>{ const x=map(px/100*iw,iw,sl,sr,L,R,W)-L, y=map(py/100*ih,ih,st,sb,T,B,H)-T;
+    const e=document.createElement('div'); e.className='bulb'; e.style.left=x+'px'; e.style.top=y+'px'; host.appendChild(e); bulbs.push(e); });
+  host.style.inset='0'; host.style.overflow='visible';
 }
 let lightMode='idle', phase=0;
 setInterval(()=>{ phase++; const n=bulbs.length;
@@ -490,28 +530,9 @@ function barPlate(y,h,grad,fs){
     <rect x="11" y="${y+5}" width="138" height="${(h-10)*.42}" rx="4" fill="#fff" opacity=".28"/>
     <text x="80" y="${y+h/2+fs*.36}" text-anchor="middle" font-family="AntonLocal,Anton,Arial Black,Impact,sans-serif" font-weight="900" font-size="${fs}" fill="#fff" stroke="#000" stroke-width="3" paint-order="stroke" letter-spacing="4">BAR</text>`;
 }
-const SYM = { BL:'', NX:'',
-  B1: svg(160,90, barPlate(15,60,'gB1',34)),
-  B2: svg(160,90, barPlate(4,40,'gB2',24)+barPlate(46,40,'gB2',24)),
-  B3: svg(160,94, barPlate(2,29,'gB3',18)+barPlate(33,29,'gB3',18)+barPlate(64,29,'gB3',18)),
-  S7: svg(100,100,`<text x="52" y="90" text-anchor="middle" font-family="AntonLocal,Anton,Impact,Arial Black,sans-serif" font-weight="900" font-size="104" fill="#000" opacity=".35" transform="translate(4,3) skewX(-8)">7</text>
-      <text x="52" y="90" text-anchor="middle" font-family="AntonLocal,Anton,Impact,Arial Black,sans-serif" font-weight="900" font-size="104" fill="url(#g7)" stroke="url(#gGold)" stroke-width="7" paint-order="stroke" transform="skewX(-8)">7</text>
-      <path d="M30 20 L74 20 L70 28 L33 28 Z" fill="#fff" opacity=".45" transform="skewX(-8)"/>`),
-  X2: svg(96,96,`<circle cx="48" cy="48" r="45" fill="#6b4300"/><circle cx="48" cy="48" r="43" fill="url(#gCoin)"/>
-      <circle cx="48" cy="48" r="40" fill="none" stroke="#7a4a00" stroke-width="4" stroke-dasharray="3 3"/>
-      <circle cx="48" cy="48" r="32" fill="url(#gCoin)" stroke="#fff3b0" stroke-width="2"/>
-      <text x="48" y="60" text-anchor="middle" font-family="AntonLocal,Anton,Arial Black,sans-serif" font-weight="900" font-size="34" fill="#4b0f73" stroke="#fff" stroke-width="3" paint-order="stroke">2X</text>
-      <ellipse cx="34" cy="26" rx="16" ry="8" fill="#fff" opacity=".45" transform="rotate(-25 34 26)"/>`),
-  CH: svg(92,92,`<path d="M46 8 C38 22 28 34 22 54 M46 8 C50 26 58 38 70 52" stroke="#2f7d1f" stroke-width="5" fill="none" stroke-linecap="round"/>
-      <path d="M46 8 C58 0 72 4 78 14 C64 18 54 16 46 8Z" fill="#3fae2a" stroke="#1e5a12" stroke-width="2"/>
-      <circle cx="24" cy="64" r="20" fill="url(#gCh)" stroke="#4a0008" stroke-width="2"/><circle cx="68" cy="62" r="20" fill="url(#gCh)" stroke="#4a0008" stroke-width="2"/>
-      <ellipse cx="17" cy="56" rx="6" ry="4" fill="#fff" opacity=".7"/><ellipse cx="61" cy="54" rx="6" ry="4" fill="#fff" opacity=".7"/>`),
-  OF: svg(130,84,`<rect x="3" y="3" width="124" height="78" rx="12" fill="url(#gGold)" stroke="#5a3a00" stroke-width="2"/>
-      <rect x="9" y="9" width="112" height="66" rx="8" fill="url(#gDeal)" stroke="#e9ffd9" stroke-width="2"/>
-      <text x="65" y="46" text-anchor="middle" font-family="AntonLocal,Anton,Arial Black,sans-serif" font-weight="900" font-size="26" fill="#fff" stroke="#053" stroke-width="4" paint-order="stroke" letter-spacing="1">DEAL</text>
-      <text x="65" y="68" text-anchor="middle" font-family="AntonLocal,Anton,Arial Black,sans-serif" font-weight="900" font-size="17" fill="url(#gGold)" stroke="#053" stroke-width="3" paint-order="stroke" letter-spacing="6">$$$</text>
-      <rect x="13" y="12" width="104" height="14" rx="6" fill="#fff" opacity=".22"/>`),
-};
+const img = (f,alt) => `<img src="art/${f}.webp" alt="${alt}" draggable="false">`;
+const SYM = { BL:'', NX:'', B1:img('b1','single bar'), B2:img('b2','double bar'), B3:img('b3','triple bar'),
+  S7:img('s7','seven'), X2:img('x2','2X wild'), CH:img('ch','cherries'), OF:img('deal','DEAL') };
 
 /* =================================================================
    REELS
@@ -828,6 +849,9 @@ document.addEventListener('keydown',e=>{
 
 buildReels(); sizeReels(); buildBulbs(); renderBoard(); render(); msgCycle(IDLE_MSGS);
 addEventListener('resize',()=>{ sizeReels(); buildBulbs(); clearWins(); });
+// the cabinet grows as the artwork loads, so keep the bulbs pinned to the painted ones
+if ('ResizeObserver' in window) new ResizeObserver(()=>buildBulbs()).observe($('cab'));
+addEventListener('load',()=>{ sizeReels(); buildBulbs(); });
 // Android app hooks: Back closes the settings panel; leaving the app quiets the sound
 window.onAndroidBack = () => { if (!$('sheet').classList.contains('hide')){ closeSheet(); return true; } return false; };
 window.onAndroidPause = () => { autoLeft=0; render(); if (S.ctx) S.ctx.suspend(); };

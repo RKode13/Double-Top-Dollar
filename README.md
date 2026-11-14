@@ -23,3 +23,8 @@ The info tab shows the paytable and the exact odds, calculated from the reel wei
 - About 55% of spins pay something.
 - Deal Round about 1 in 46 spins.
 - Payback 88.8% to 94.1%, depending on your offer choices.
+
+## Artwork
+The images in `art/` were made by the owner with an AI image generator. Their painted checkerboard backgrounds were removed, and they were saved as transparent WebP files.
+- The cabinet and the reel frame are drawn as stretchable frames (CSS `border-image`).
+- The cabinet's painted light bulbs are animated with glowing dots placed on top of them.
