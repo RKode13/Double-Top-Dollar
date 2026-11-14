@@ -85,7 +85,7 @@ body{color:var(--white);font-family:AntonLocal,Anton,"Arial Black",Impact,system
 .msgbar .t{font-size:clamp(14px,4.6vw,20px);letter-spacing:1px;color:#5dffae;text-shadow:0 0 8px #19c95b;line-height:1.05;padding:0 6px}
 .msgbar .t small{display:block;font-size:.7em}
 .msgbar.split{display:grid;grid-template-columns:1fr 1fr;padding:0}
-.msgbar.split>div{height:100%;display:flex;align-items:center;justify-content:center;font-size:clamp(13px,4.2vw,17px);color:#5dffae;text-shadow:0 0 6px #19c95b}
+.msgbar.split>div{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1;font-size:clamp(12px,min(3.8vw,1.9svh),16px);color:#5dffae;text-shadow:0 0 6px #19c95b}
 .msgbar.split>div.inv{background:#5dffae;color:#002b14;text-shadow:none}
 .msgbar.money .t{animation:money .5s steps(2) infinite}
 @keyframes money{50%{color:#fff;text-shadow:0 0 14px #5dffae}}
@@ -149,7 +149,7 @@ body{color:var(--white);font-family:AntonLocal,Anton,"Arial Black",Impact,system
 
 /* ---------- Bottom sheet ---------- */
 .sheet{position:fixed;inset:0;z-index:30;background:#000a;display:flex;align-items:flex-end;justify-content:center}
-.sheetin{width:min(460px,100vw);max-height:88vh;display:flex;flex-direction:column;background:var(--panel);border-top:3px solid var(--gold2);
+.sheetin{width:min(460px,100vw);max-height:88svh;display:flex;flex-direction:column;background:var(--panel);border-top:3px solid var(--gold2);
   font-family:system-ui,sans-serif;font-weight:700;color:#eee}
 .tabs{display:flex;background:var(--panel2)}
 .tabs button{flex:0 0 64px;height:56px;background:none;border:none;color:#888;font-size:24px;cursor:pointer}
@@ -213,22 +213,22 @@ body{flex-direction:column;align-items:center}
 .bbtn.go{aspect-ratio:auto;height:64px;background-size:100% 100%}
 .bbtn.hint{animation:hint2 1s infinite}
 @keyframes hint2{50%{filter:brightness(1.25) drop-shadow(0 0 12px #fff)}}
-.console{width:min(460px,100vw);padding:10px 14px 12px;margin:0 0 16px;border-radius:0 0 26px 26px;
+.console{width:min(460px,100vw);padding:10px 14px 12px;margin:0;border-radius:0 0 26px 26px;
   background:linear-gradient(180deg,#24242c,#0b0b10);box-shadow:0 0 0 3px #c9c9d6,0 0 0 5px #4a4a56,0 14px 30px #000}
 .console .meters{margin-top:4px}
 /* neon "DEAL" under the gold logo */
 .logo{text-align:center}
 .msgbar .t{display:flex;align-items:center;justify-content:center;gap:8px;flex-direction:column}
 .msgbar .t:has(.dicon){flex-direction:row}
-.dicon img{height:clamp(30px,4.2vh,40px);display:block;filter:drop-shadow(0 0 6px #19c95b)}
+.dicon img{height:clamp(30px,4.2svh,40px);display:block;filter:drop-shadow(0 0 6px #19c95b)}
 .dtxt{font-size:.78em;line-height:1.1;text-align:left}
 /* SPIN clearly bigger than the side buttons */
-.spin{width:clamp(84px,11.6vh,124px)!important;height:clamp(84px,11.6vh,124px)!important}
-.spin .i{font-size:clamp(34px,5vh,46px)}
-.round{width:clamp(38px,4.9vh,48px)!important;height:clamp(38px,4.9vh,48px)!important;font-size:18px}
+.spin{width:clamp(64px,10svh,124px)!important;height:clamp(64px,10svh,124px)!important}
+.spin .i{font-size:clamp(34px,5svh,46px)}
+.round{width:clamp(32px,4.9svh,48px)!important;height:clamp(32px,4.9svh,48px)!important;font-size:18px}
 .controls{margin-top:0}
 /* cash stacks instead of chips */
-:root{--cash:min(28vw,108px,9.7vh)}
+:root{--cash:min(28vw,108px,9.2svh)}
 .grid9{row-gap:0;margin-top:2px}
 .chip{width:var(--cash);height:auto;aspect-ratio:305/220;border-radius:0;background:var(--img) center/contain no-repeat;box-shadow:none;
   filter:drop-shadow(0 4px 4px #000a)}
@@ -236,10 +236,10 @@ body{flex-direction:column;align-items:center}
   text-shadow:0 2px 0 #000,0 0 8px #000;letter-spacing:.5px;transform:translateY(-6%)}
 .chip.lit{transform:translateY(-4px) scale(1.08);box-shadow:none!important;filter:drop-shadow(0 0 10px var(--c)) drop-shadow(0 0 4px #fff)!important}
 .plaque{background:url(art/cash_top.webp) center/contain no-repeat;aspect-ratio:760/283}
-.plaque .v{left:0;top:0;width:100%;height:100%;color:#fff;font-family:AntonLocal,Anton,"Arial Black",sans-serif;font-size:clamp(24px,min(8vw,4.3vh),38px)!important;
+.plaque .v{left:0;top:0;width:100%;height:100%;color:#fff;font-family:AntonLocal,Anton,"Arial Black",sans-serif;font-size:clamp(24px,min(8vw,4.3svh),38px)!important;
   -webkit-text-stroke:2px #000;paint-order:stroke fill;text-shadow:0 3px 0 #000,0 0 10px #000;letter-spacing:1px}
 /* $ medallions beside the logo */
-.logo .medal{position:absolute;top:8%;width:clamp(34px,min(11vw,5.2vh),52px);filter:drop-shadow(0 3px 3px #000c);z-index:1}
+.logo .medal{position:absolute;top:8%;width:clamp(34px,min(11vw,5.2svh),52px);filter:drop-shadow(0 3px 3px #000c);z-index:1}
 .logo .medal.l{left:-2px}.logo .medal.r{right:-2px}
 .logo > img:not(.medal){max-width:76%}
 /* gold dividers with $ medallions between the reels */
@@ -247,30 +247,29 @@ body{flex-direction:column;align-items:center}
 .divider{position:absolute;top:0;bottom:0;width:14px;background:url(art/divider.webp) center/100% 100% no-repeat;z-index:3;pointer-events:none;
   filter:drop-shadow(0 0 3px #000)}
 .divider img{position:absolute;left:50%;top:50%;width:30px;transform:translate(-50%,-50%);filter:drop-shadow(0 2px 3px #000)}
-.logo img{width:auto;max-width:100%;max-height:8.6vh;margin:0 auto}
-.logo .neon{position:relative;margin-top:-1.6vh;font-family:AntonLocal,Anton,"Arial Black",sans-serif;font-size:clamp(24px,min(9vw,4.6vh),40px);
+.logo img{width:auto;max-width:100%;max-height:7.6svh;margin:0 auto}
+.logo .neon{position:relative;margin-top:-1.6svh;font-family:AntonLocal,Anton,"Arial Black",sans-serif;font-size:clamp(24px,min(9vw,4.6svh),40px);
   line-height:1;letter-spacing:.35em;padding-left:.35em;color:#eafff0;
   text-shadow:0 0 2px #fff,0 0 6px #3cff8a,0 0 12px #19c95b,0 0 22px #19c95b,0 0 36px #19c95b;animation:neon 7s infinite}
 @keyframes neon{0%,91%,95%,100%{opacity:1}92%,94%{opacity:.35}93%{opacity:.85}}
 /* fit the whole machine on one phone screen */
 .cab{margin-top:0}
-:root{--chip:min(54px,14vw,6.1vh)}
-.grid9{row-gap:min(6px,.6vh)}
-.star{width:clamp(48px,min(16vw,7.6vh),72px)}
-.msgbar{height:clamp(38px,5vh,50px);margin-top:min(10px,1vh)}
-.reelbox{margin-top:min(10px,1vh)}
-.board{margin-top:min(6px,.6vh)}
+:root{--chip:min(54px,14vw,6.1svh)}
+.grid9{row-gap:min(6px,.6svh)}
+.star{width:clamp(34px,min(16vw,7.6svh),72px)}
+.msgbar{height:clamp(30px,5svh,50px);margin-top:min(10px,1svh)}
+.reelbox{margin-top:min(10px,1svh)}
+.board{margin-top:min(6px,.6svh)}
 .console{padding:8px 14px 10px}
 .console .meters{margin-top:0}
-.meter .v{font-size:clamp(14px,min(4.6vw,2.3vh),20px);padding:3px 2px}
+.meter .v{font-size:clamp(14px,min(4.6vw,2.3svh),20px);padding:3px 2px}
 .meter .lb{margin-top:3px}
 .controls{margin-top:4px}
-.spin{width:clamp(76px,10.5vh,104px);height:clamp(76px,10.5vh,104px)}
-.round{width:clamp(44px,6vh,56px);height:clamp(44px,6vh,56px)}
+.spin{width:clamp(76px,10.5svh,104px);height:clamp(76px,10.5svh,104px)}
+.round{width:clamp(44px,6svh,56px);height:clamp(44px,6svh,56px)}
 .foot{margin-top:6px;font-size:10px}
 @media (max-height:940px){.foot{display:none}}
 /* artwork chips */
-.chip{background:var(--img) center/100% 100% no-repeat;box-shadow:0 3px 0 #0006,0 6px 8px #000a}
 .chip::before{display:none}
 .chip .v{font-family:AntonLocal,Anton,"Arial Black",sans-serif}
 .chip.lit{box-shadow:0 3px 0 #0006,0 0 0 3px #fff,0 0 18px 6px var(--c)}
@@ -621,7 +620,7 @@ function placeDividers(){
 }
 function sizeReels(){
   const w=$('reels').getBoundingClientRect().width;
-  H=Math.max(44,Math.min(84,Math.floor((w-16)/3*.6),Math.floor(innerHeight*.064))); document.documentElement.style.setProperty('--h',H+'px'); reels.forEach(drawReel); placeDividers();
+  H=Math.max(30,Math.min(84,Math.floor((w-16)/3*.6),Math.floor((window.visualViewport?visualViewport.height:innerHeight)*.054))); document.documentElement.style.setProperty('--h',H+'px'); reels.forEach(drawReel); placeDividers();
   // line-number markers: left side at the line's first row, right side at its last row (nudged apart when they share a row)
   const used={};
   LINES.forEach((L,i)=>['l','r'].forEach(side=>{ const row=side==='l'?L[0]:L[2], key=side+row; const n=used[key]=(used[key]||0)+1;
