@@ -218,6 +218,35 @@ body{flex-direction:column;align-items:center}
 .console .meters{margin-top:4px}
 /* neon "DEAL" under the gold logo */
 .logo{text-align:center}
+.msgbar .t{display:flex;align-items:center;justify-content:center;gap:8px;flex-direction:column}
+.msgbar .t:has(.dicon){flex-direction:row}
+.dicon img{height:clamp(30px,4.2vh,40px);display:block;filter:drop-shadow(0 0 6px #19c95b)}
+.dtxt{font-size:.78em;line-height:1.1;text-align:left}
+/* SPIN clearly bigger than the side buttons */
+.spin{width:clamp(84px,11.6vh,124px)!important;height:clamp(84px,11.6vh,124px)!important}
+.spin .i{font-size:clamp(34px,5vh,46px)}
+.round{width:clamp(38px,4.9vh,48px)!important;height:clamp(38px,4.9vh,48px)!important;font-size:18px}
+.controls{margin-top:0}
+/* cash stacks instead of chips */
+:root{--cash:min(28vw,108px,9.7vh)}
+.grid9{row-gap:0;margin-top:2px}
+.chip{width:var(--cash);height:auto;aspect-ratio:305/220;border-radius:0;background:var(--img) center/contain no-repeat;box-shadow:none;
+  filter:drop-shadow(0 4px 4px #000a)}
+.chip .v{font-size:calc(var(--cash)*.25)!important;color:#fff;-webkit-text-stroke:1.5px #000;paint-order:stroke fill;
+  text-shadow:0 2px 0 #000,0 0 8px #000;letter-spacing:.5px;transform:translateY(-6%)}
+.chip.lit{transform:translateY(-4px) scale(1.08);box-shadow:none!important;filter:drop-shadow(0 0 10px var(--c)) drop-shadow(0 0 4px #fff)!important}
+.plaque{background:url(art/cash_top.webp) center/contain no-repeat;aspect-ratio:760/283}
+.plaque .v{left:0;top:0;width:100%;height:100%;color:#fff;font-family:AntonLocal,Anton,"Arial Black",sans-serif;font-size:clamp(24px,min(8vw,4.3vh),38px)!important;
+  -webkit-text-stroke:2px #000;paint-order:stroke fill;text-shadow:0 3px 0 #000,0 0 10px #000;letter-spacing:1px}
+/* $ medallions beside the logo */
+.logo .medal{position:absolute;top:8%;width:clamp(34px,min(11vw,5.2vh),52px);filter:drop-shadow(0 3px 3px #000c);z-index:1}
+.logo .medal.l{left:-2px}.logo .medal.r{right:-2px}
+.logo > img:not(.medal){max-width:76%}
+/* gold dividers with $ medallions between the reels */
+.reels{gap:14px}
+.divider{position:absolute;top:0;bottom:0;width:14px;background:url(art/divider.webp) center/100% 100% no-repeat;z-index:3;pointer-events:none;
+  filter:drop-shadow(0 0 3px #000)}
+.divider img{position:absolute;left:50%;top:50%;width:30px;transform:translate(-50%,-50%);filter:drop-shadow(0 2px 3px #000)}
 .logo img{width:auto;max-width:100%;max-height:8.6vh;margin:0 auto}
 .logo .neon{position:relative;margin-top:-1.6vh;font-family:AntonLocal,Anton,"Arial Black",sans-serif;font-size:clamp(24px,min(9vw,4.6vh),40px);
   line-height:1;letter-spacing:.35em;padding-left:.35em;color:#eafff0;
@@ -264,7 +293,7 @@ body{flex-direction:column;align-items:center}
 
 <div class="cab" id="cab">
   <div class="bulbs" id="bulbs"></div>
-  <div class="logo"><img src="art/logo.webp" alt="Double Dollar"><div class="neon">DEAL</div></div>
+  <div class="logo"><img class="medal l" src="art/medal.webp" alt=""><img class="medal r" src="art/medal.webp" alt=""><img src="art/logo.webp" alt="Double Dollar"><div class="neon">DEAL</div></div>
 
   <div class="board" id="board">
     <div class="toprow">
@@ -329,24 +358,24 @@ body{flex-direction:column;align-items:center}
 /* =================================================================
    GAME MATH — the same numbers drive play and the odds screen
    ================================================================= */
-const PAY = { X3:1000, S7:80, B3:40, B2:25, B1:12, ANYBAR:5, C1:1, C2:4, C3:15, W2:8 }; // × line bet
-const NLINES = 5;
-const LINES = [[1,1,1],[0,0,0],[2,2,2],[0,1,2],[2,1,0]];       // rows per reel: 0 top, 1 middle, 2 bottom
-const LINECOL = ['#ff2b3a','#ffd23f','#3cff8a','#4da3ff','#ff6bf0'];
+const PAY = { X3:80, S7:8, B3:4, B2:2.5, B1:1, ANYBAR:.5, C1:.2, C2:.5, C3:1 }; // × TOTAL bet, per winning line
+const NLINES = 9;
+const LINES = [[1,1,1],[0,0,0],[2,2,2],[0,1,2],[2,1,0],[1,0,1],[1,2,1],[2,1,2],[0,1,0]]; // rows per reel: 0 top, 1 middle, 2 bottom
+const LINECOL = ['#ff2b3a','#ffd23f','#3cff8a','#4da3ff','#ff6bf0','#ff9a2b','#b07bff','#2ee6d6','#ffffff'];
 const R12 = ['X2','B1','S7','B2','CH','B1','B3','B1','S7','B2','CH'];
 const R3  = ['X2','B1','S7','B2','CH','B1','B3','B1','OF','B2','CH'];
-const WEIGHT = { X2:4, S7:6, B3:12, B2:18, B1:36, CH:20, BL:2, NX:1, OF:2 }; // virtual-reel weight per stop
+const WEIGHT = { X2:4, S7:5, B3:13, B2:18, B1:25.5, CH:19, BL:2, NX:1.5, OF:2 }; // virtual-reel weight per stop
 // Deal Round: each offer lights 1–5 board values and adds them up (× total bet);
 // then each 2X star may light, doubling it (both = ×4)
-const CELLS = [1,1.5,2,3,4,5,6,8,10], CELLW = [30,26,20,14,9,6,4,2.5,1.5];
-const TOPV = 100, TOPW = 0.15;
-const PICKS = [[1,22],[2,30],[3,26],[4,14],[5,8]];               // [how many values light, weight]
-const MULTS = [[1,80],[2,16],[4,4]];
-const NOFFERS = [[3,30],[4,50],[5,20]];
-const BOARD_ORDER = [3,8,2, 4,1.5,1, 6,10,5];                 // where each value sits on the 3×3 board
-const CHIPCOL = {1:['#e8742a','#7a3300'],1.5:['#9b4dff','#4a1a8a'],2:['#d4a400','#6b5200'],3:['#18a957','#06502a'],4:['#2a74e0','#0c3478'],
-                 5:['#e03a9a','#701046'],6:['#12b5a8','#055a53'],8:['#d62030','#6a0610'],10:['#262626','#000']};
-const CHIPIMG = {1:'orange',1.5:'purple',2:'gold',3:'green',4:'blue',5:'pink',6:'teal',8:'red',10:'black'};
+const CELLS = [1,1.5,2,2.5,4,5,7.5,10], CELLW = [17,17,19,26,44,27,9,7];   // × total bet
+const TOPV = 100, TOPW = 0.005;
+const PICKS = [[2,37],[3,88],[4,16],[5,4]];                    // [how many values light, weight]
+const MULTS = [[1,91],[2,8],[4,1]];                           // no star / one 2X star / both stars
+const NOFFERS = [[4,1]];                                      // always 4 offers
+// the 3×3 board: [value, chip art]; 2× appears twice and both light together
+const SLOTS = [[2.5,'green'],[5,'red'],[2,'gold'],[4,'blue'],[1.5,'purple'],[1,'orange'],[7.5,'teal'],[10,'black'],[2,'pink']];
+const CHIPCOL = {green:['#18a957','#06502a'],red:['#d62030','#6a0610'],gold:['#d4a400','#6b5200'],blue:['#2a74e0','#0c3478'],purple:['#9b4dff','#4a1a8a'],
+                 orange:['#e8742a','#7a3300'],teal:['#12b5a8','#055a53'],black:['#262626','#000'],pink:['#e03a9a','#701046']};
 const BETS = [10,20,30,50,100,150,200,300,500,1000,2000,3000];  // cents
 const COINS = 10;
 
@@ -355,24 +384,25 @@ const STRIPS = [R12,R12,R3].map(s => s.flatMap(x => [x,'BL']));
 STRIPS[2].forEach((x,i) => { if (x==='OF'){ STRIPS[2][(i+1)%NSTOP]='NX'; STRIPS[2][(i-1+NSTOP)%NSTOP]='NX'; }});
 const isBlank = s => s==='BL' || s==='NX' || s==='OF';
 
-function evalLine(l){
+const isBar = s => s==='B1'||s==='B2'||s==='B3';
+function evalLine(l){   // best reading of a line; the 2X wild stands in for anything except DEAL
   const w = l.filter(s=>s==='X2').length;
-  if (w===3) return { x:PAY.X3, name:'TRIPLE 2X', top:true };
-  const nw = l.filter(s=>s!=='X2'), m = 2**w;
-  const names = {S7:'THREE 7s',B3:'TRIPLE BARS',B2:'DOUBLE BARS',B1:'SINGLE BARS',CH:'THREE CHERRIES'};
-  if (nw.every(s=>s===nw[0]) && PAY[nw[0]]) return { x:PAY[nw[0]]*m, name:names[nw[0]], m };
-  if (nw.every(s=>s[0]==='B' && s!=='BL')) return { x:PAY.ANYBAR*m, name:'ANY BARS', m };
-  if (l[0]==='CH'){ let c=0; for (const s of l){ if (s==='CH'||s==='X2') c++; else break; }
-    return { x:PAY['C'+c]*(c<3?m:1), name: c===1?'CHERRY':'TWO CHERRIES', m:c<3?m:1 }; }
-  if (w===2) return { x:PAY.W2, name:'TWO 2X', m:1 };
-  return { x:0 };
+  if (w===3) return { x:PAY.X3, name:'TRIPLE 2X', top:true, m:1 };
+  const nw = l.filter(s=>s!=='X2'), m = 2**w, names = {S7:'THREE 7s',B3:'TRIPLE BARS',B2:'DOUBLE BARS',B1:'SINGLE BARS'};
+  let best = { x:0 };
+  const consider = (x,name,mm) => { if (x>best.x) best={ x, name, m:mm }; };
+  for (const T of ['S7','B3','B2','B1']) if (nw.every(s=>s===T)) consider(PAY[T]*m, names[T], m);
+  if (nw.every(isBar)) consider(PAY.ANYBAR*m, 'ANY BARS', m);
+  let c=0, cw=0; for (const s of l){ if (s==='CH'||s==='X2'){ c++; if (s==='X2') cw++; } else break; }
+  if (c) consider(PAY['C'+c]*2**cw, ['','CHERRY','TWO CHERRIES','THREE CHERRIES'][c], 2**cw);
+  return best;
 }
 const windowAt = (r, stop) => [-1,0,1].map(d => STRIPS[r][(stop+d+NSTOP)%NSTOP]);
 function evaluate(stops, bet){
   const win = stops.map((s,r) => windowAt(r,s));
-  const lineBet = bet/NLINES, wins = [];
+  const wins = [];
   LINES.forEach((L,i) => { const l = L.map((row,r)=>win[r][row]); const e = evalLine(l);
-    if (e.x>0) wins.push({ line:i, amt:Math.round(e.x*lineBet), ...e }); });
+    if (e.x>0) wins.push({ line:i, amt:Math.round(e.x*bet), ...e }); });
   const dealRow = win[2].indexOf('OF');
   return { wins, total: wins.reduce((a,w)=>a+w.amt,0), dealRow };
 }
@@ -397,8 +427,8 @@ function computeOdds(){
   let line=0, hit=0, bonus=0, top=0; const freq={};
   for (let a=0;a<NSTOP;a++) for (let b=0;b<NSTOP;b++) for (let c=0;c<NSTOP;c++){
     const p = wt[0][a]*wt[1][b]*wt[2][c]/(T[0]*T[1]*T[2]);
-    const r = evaluate([a,b,c], NLINES);           // bet = 5 → line bet 1
-    line += p*r.total/NLINES;
+    const r = evaluate([a,b,c], 100);              // a $1.00 bet, in cents
+    line += p*r.total/100;
     if (r.total>0 || r.dealRow>=0) hit+=p;
     if (r.dealRow>=0) bonus+=p;
     if (r.wins.some(w=>w.top)) top+=p;
@@ -548,7 +578,12 @@ function msgHint(advice){ // alternating "BEST PLAY SAYS" | "TAKE OFFER"/"TRY AG
   msgTimer=setInterval(()=>{ k++; bar.children[0].classList.toggle('inv',k%2===1); bar.children[1].classList.toggle('inv',k%2===0); },600);
 }
 function msgCycle(list, ms=2600){ clearInterval(msgTimer); let i=0; msg(list[0]); msgTimer=setInterval(()=>{ i=(i+1)%list.length; $('msgbar').innerHTML=`<div class="t">${list[i]}</div>`; }, ms); }
-const IDLE_MSGS = ['GOOD LUCK','DEAL ON ANY ROW OF REEL 3<small>STARTS THE DEAL ROUND</small>','2X DOUBLES • 2X 2X QUADRUPLES'];
+const IDLE_MSGS = () => ['GOOD LUCK',
+  '<span class="dicon"><img src="art/deal.webp" alt=""></span><span class="dtxt">ON ANY LINE ON REEL 3<br>STARTS THE DEAL ROUND</span>',
+  `TOP OFFER<br>${moneyShort(TOPV*G.bet)}`,
+  '2X DOUBLES • 2X 2X QUADRUPLES',
+  '4 OFFERS EVERY DEAL ROUND<small>TAKE ONE OR TRY AGAIN</small>',
+  `${NLINES} LINES ALWAYS PLAYED`];
 
 /* =================================================================
    SYMBOLS (vector art, shaded with the shared gradients above)
@@ -577,13 +612,20 @@ function buildReels(){
   LINES.forEach((L,i)=>['l','r'].forEach(side=>{ const m=document.createElement('div'); m.className='lmark'; m.id=`lm${side}${i}`; m.textContent=i+1;
     m.style.background=LINECOL[i]; m.style.color=LINECOL[i]; m.style[side==='l'?'left':'right']='2px'; $('reelbox').appendChild(m); }));
 }
+function placeDividers(){
+  const host=$('reels'); host.querySelectorAll('.divider').forEach(d=>d.remove());
+  const hb=host.getBoundingClientRect();
+  [0,1].forEach(i=>{ const a=reels[i].el.getBoundingClientRect(), b=reels[i+1].el.getBoundingClientRect();
+    const d=document.createElement('div'); d.className='divider'; d.innerHTML='<img src="art/medal.webp" alt="">';
+    d.style.left=((a.right+b.left)/2-hb.left-7)+'px'; host.appendChild(d); });
+}
 function sizeReels(){
   const w=$('reels').getBoundingClientRect().width;
-  H=Math.max(44,Math.min(84,Math.floor((w-16)/3*.6),Math.floor(innerHeight*.064))); document.documentElement.style.setProperty('--h',H+'px'); reels.forEach(drawReel);
+  H=Math.max(44,Math.min(84,Math.floor((w-16)/3*.6),Math.floor(innerHeight*.064))); document.documentElement.style.setProperty('--h',H+'px'); reels.forEach(drawReel); placeDividers();
   // line-number markers: left side at the line's first row, right side at its last row (nudged apart when they share a row)
   const used={};
   LINES.forEach((L,i)=>['l','r'].forEach(side=>{ const row=side==='l'?L[0]:L[2], key=side+row; const n=used[key]=(used[key]||0)+1;
-    const el=$(`lm${side}${i}`); el.style.top=(8+OFF()+(row+.5)*H+(n-1)*18-(row===1?0:9))+'px'; }));
+    const el=$(`lm${side}${i}`); el.style.top=(6+OFF()+(row+.5)*H+(n-2)*Math.min(15,H*.26))+'px'; }));
 }
 function drawReel(R){ const p=((R.pos%NSTOP)+NSTOP)%NSTOP+NSTOP; R.stripEl.style.transform=`translateY(${-(p-1)*H+OFF()}px)`; }
 
@@ -662,13 +704,14 @@ function render(){
 }
 function renderBoard(){
   const g=$('grid9'); g.innerHTML='';
-  BOARD_ORDER.forEach(v=>{ const t=document.createElement('div'); t.className='chip'; t.dataset.v=v;
-    t.style.setProperty('--c',CHIPCOL[v][0]); t.style.setProperty('--d',CHIPCOL[v][1]); t.style.setProperty('--img',`url(art/chip_${CHIPIMG[v]}.webp)`);
+  SLOTS.forEach(([v,img])=>{ const t=document.createElement('div'); t.className='chip'; t.dataset.v=v;
+    t.style.setProperty('--c',CHIPCOL[img][0]); t.style.setProperty('--d',CHIPCOL[img][1]); t.style.setProperty('--img',`url(art/cash_${img}.webp)`);
     const txt=moneyShort(Math.round(v*G.bet)); t.innerHTML=`<span class="v" style="font-size:calc(var(--chip)*${txt.length<=4?.28:txt.length===5?.24:.2})">${txt}</span>`; g.appendChild(t); });
   const top=moneyShort(TOPV*G.bet), tv=$('tTop').querySelector('.v'); tv.textContent=top; tv.style.fontSize=top.length>6?'clamp(14px,4.4vw,21px)':'';
 }
 const moneyShort = c => c%100===0 ? '$'+(c/100).toLocaleString('en-US') : money(c);  // $160 instead of $160.00
-const tileFor = v => v===TOPV ? $('tTop') : document.querySelector(`#grid9 .chip[data-v="${v}"]`);
+const tilesFor = v => v===TOPV ? [$('tTop')] : [...document.querySelectorAll(`#grid9 .chip[data-v="${v}"]`)];
+const lightV = (v,...cls) => tilesFor(v).forEach(t=>t.classList.add(...cls));
 
 async function rollup(amount, big){
   let shown=0, i=0, skip=false; rolling=()=>{skip=true}; render();
@@ -694,7 +737,7 @@ async function spin(){
   const res=evaluate(stops, G.bet);
   if (res.total>0){
     G.won+=res.total; G.best=Math.max(G.best,res.total);
-    const big=res.total>=20*G.bet, top=res.wins.some(w=>w.top);
+    const big=res.total>=8*G.bet, top=res.wins.some(w=>w.top);
     lightMode=big?'big':'win'; $('winamt').textContent=money(res.total); $('winamt').classList.add('on');
     res.wins.forEach(w=>drawLine(w.line,true,true));
     msg(res.wins.length===1 ? `${res.wins[0].name}${res.wins[0].m>1?' ×'+res.wins[0].m:''} — ${money(res.total)}` : `${res.wins.length} LINES WIN ${money(res.total)}`, {money:big});
@@ -710,7 +753,7 @@ async function spin(){
   else if (res.total>0){ cycleWins(res.wins); }
   else msg(G.bal<G.bet?'OUT OF MONEY — TAP + FOR MORE':'GOOD LUCK');
   lightMode='idle'; busy=false; render();
-  if (res.total===0 && res.dealRow<0) setTimeout(()=>{ if(!busy) msgCycle(IDLE_MSGS); }, 1500);
+  if (res.total===0 && res.dealRow<0) setTimeout(()=>{ if(!busy) msgCycle(IDLE_MSGS()); }, 1500);
   if (autoLeft>0){ autoLeft--; render(); if (autoLeft>0 && G.bal>=G.bet){ await sleep(res.total>0?900:350); if (autoLeft>0 && !busy) spin(); } else { autoLeft=0; render(); } }
 }
 
@@ -726,14 +769,14 @@ async function revealOffer(o, bet){
   // 1) the lights race around the board
   for (let f=0; f<18; f++){
     boardReset(); const n=1+Math.floor(rand()*4);
-    for (let j=0;j<n;j++) tileFor(BVALS[Math.floor(rand()*BVALS.length)]).classList.add('lit');
+    for (let j=0;j<n;j++) lightV(BVALS[Math.floor(rand()*BVALS.length)],'lit');
     SFX.shuffle(); await sleep(70+f*3);
   }
   boardReset(); await sleep(250);
   // 2) the chosen values light one at a time and add up
   let sum=0;
   for (let j=0;j<o.vals.length;j++){
-    const v=o.vals[j]; sum+=v; tileFor(v).classList.add('lit'); SFX.chipLand(j);
+    const v=o.vals[j]; sum+=v; lightV(v,'lit'); SFX.chipLand(j);
     msg(o.vals.slice(0,j+1).map(x=>money(Math.round(x*bet))).join(' + ') + (j>0?`<small>= ${money(Math.round(sum*bet))}</small>`:''));
     await sleep(560);
   }
@@ -761,7 +804,7 @@ async function dealRound(row){
   msg('DEAL ROUND!',{money:true}); await sleep(1400);
   $('board').classList.add('bonus'); boardReset();
   msg('PRESS BUTTON<br>TO START BONUS'); await waitGo();
-  msg(`YOU ARE AWARDED<br>${n} OFFERS!`); say(`You have ${n} offers!`); await waitGo();
+  msg(`YOU HAVE ${n} OFFERS<br>TAKE ONE!`); say(`You have ${n} offers!`); await waitGo();
   const ord=['FIRST','SECOND','THIRD','FOURTH','FIFTH'];
   let took=-1;
   for (let i=0;i<n;i++){
@@ -779,7 +822,7 @@ async function dealRound(row){
   }
   showDeck('none');
   const win=offers[took].amt;
-  boardReset(); offers[took].vals.forEach(v=>tileFor(v).classList.add('lit','won'));
+  boardReset(); offers[took].vals.forEach(v=>lightV(v,'lit','won'));
   if (offers[took].mult>=2) $('mL').classList.add('lit'); if (offers[took].mult===4) $('mR').classList.add('lit');
   SFX.take(); flash(900); coins(16); lightMode='big';
   msg(`CONGRATULATIONS<br>YOU WIN ${money(win)}`,{money:true}); say(`Congratulations! You win ${spoken(win)}!`);
@@ -827,24 +870,25 @@ function drawSheet(){
       <p class="note">The voice uses your device's built-in speech, so it sounds different on different phones.</p>`;
     foot.innerHTML=`<button id="fOk">OK</button>`; $('fOk').onclick=closeSheet;
   } else {
-    const mini=s=>`<span class="mini">${SYM[s]}</span>`, lb=money(G.bet/NLINES);
+    const mini=s=>`<span class="mini">${SYM[s]}</span>`;
     const rows=[[['X2','X2','X2'],'TRIPLE 2X',PAY.X3],[['S7','S7','S7'],'THREE 7s',PAY.S7],[['B3','B3','B3'],'TRIPLE BARS',PAY.B3],
       [['B2','B2','B2'],'DOUBLE BARS',PAY.B2],[['B1','B1','B1'],'SINGLE BARS',PAY.B1],[['B1','B2','B3'],'ANY BARS',PAY.ANYBAR],
-      [['CH','CH','CH'],'THREE CHERRIES',PAY.C3],[['CH','CH'],'TWO CHERRIES',PAY.C2],[['CH'],'CHERRY',PAY.C1],[['X2','X2'],'TWO 2X',PAY.W2]];
+      [['CH','CH','CH'],'THREE CHERRIES',PAY.C3],[['CH','CH'],'TWO CHERRIES',PAY.C2],[['CH'],'CHERRY',PAY.C1]];
     const ret=G.wagered?pct(G.won/G.wagered):'—';
     body.innerHTML=`<h2>PAYTABLE & ODDS</h2>
       <p><b>An original game. Play money only — no real money, no prizes.</b></p>
-      <p>${NLINES} lines are always played. Your total bet ${money(G.bet)} is split ${lb} per line. Line pays below are at your current bet.</p>
-      <p><b>2X</b> is wild: one 2X doubles a line win, two multiply it by 4. Cherries pay from the left reel.</p>
-      <p><b>DEAL</b> anywhere on reel 3 starts the <b>Deal Round</b> with 3, 4 or 5 offers. For each offer, 1 to 5 values on the board light up and are added together. Then each 2X star that lights doubles the offer (both stars = ×4). Take it or try again; the last offer is final. "Best play" shows the choice that pays the most on average.</p>
-      <table><tr><th>Line</th><th>Pays</th><th>How often*</th></tr>${rows.map(r=>`<tr><td>${r[0].map(mini).join('')}<br><span style="font-size:11px">${r[1]}</span></td><td>${money(r[2]*G.bet/NLINES)}</td><td>${ODDS.freq[r[1]]?oneIn(ODDS.freq[r[1]]):''}</td></tr>`).join('')}</table>
+      <p>${NLINES} lines are always played for your total bet of ${money(G.bet)}. Line wins pay left to right, and every win below is shown at your current bet. Wins on different lines add up.</p>
+      <p>The <b>2X coin</b> is wild and stands in for every symbol except DEAL. One 2X in a line win doubles it; two multiply it by 4. Cherries count from the left reel.</p>
+      <p><b>DEAL</b> on any line of reel 3 starts the <b>Deal Round</b>: 4 offers. For each offer, 2 to 5 board values light up and are added together (${CELLS.map(v=>moneyShort(Math.round(v*G.bet))).join(', ')} and the ${moneyShort(TOPV*G.bet)} top offer at this bet). Each 2X star that lights doubles the offer; both stars make it ×4. Take it or try again; the 4th offer is final.</p>
+      <p><b>Best play:</b> take the 1st offer if it is more than ${money(Math.round(CONT[3]*G.bet))}, the 2nd if more than ${money(Math.round(CONT[2]*G.bet))}, the 3rd if more than ${money(Math.round(CONT[1]*G.bet))}. The "Best play says" hint follows this rule.</p>
+      <table><tr><th>Line</th><th>Pays</th><th>How often*</th></tr>${rows.map(r=>`<tr><td>${r[0].map(mini).join('')}<br><span style="font-size:11px">${r[1]}</span></td><td>${money(Math.round(r[2]*G.bet))}</td><td>${ODDS.freq[r[1]]?oneIn(ODDS.freq[r[1]]):''}</td></tr>`).join('')}</table>
       <p class="note">*Spins with that win on at least one line (any multiplier).</p>
       <h3>THE ODDS (exact, from the reel weights)</h3>
       <table><tr><td>Spins that pay something</td><td>${pct(ODDS.hit)}</td></tr>
         <tr><td>Deal Round</td><td>${oneIn(ODDS.bonus)} spins</td></tr>
         <tr><td>Triple 2X</td><td>${oneIn(ODDS.top)} spins</td></tr>
         <tr><td>Average offer</td><td>${ODDS.mean.toFixed(1)} × bet</td></tr>
-        <tr><td>Values lit per offer</td><td>1: ${PICKS.map(p=>Math.round(p[1]/PICKS.reduce((a,q)=>a+q[1],0)*100)+'%').join(' • ')} :5</td></tr>
+        <tr><td>Values lit per offer (2 • 3 • 4 • 5)</td><td>${PICKS.map(p=>Math.round(p[1]/PICKS.reduce((a,q)=>a+q[1],0)*100)+'%').join(' • ')}</td></tr>
         <tr><td>Chance of 2X / both 2X</td><td>${MULTS[1][1]}% / ${MULTS[2][1]}%</td></tr>
         <tr><td>Payback if you always take the 1st offer</td><td>${pct(ODDS.rtpFirst)}</td></tr>
         <tr><td>Payback following "best play"</td><td>${pct(ODDS.rtpBest)}</td></tr></table>
@@ -879,7 +923,7 @@ document.addEventListener('keydown',e=>{
   else if (e.key==='Enter' && dealChoice){ e.preventDefault(); dealChoice($('deckDeal').classList.contains('hide')?undefined:'take'); }
 });
 
-buildReels(); sizeReels(); buildBulbs(); renderBoard(); render(); msgCycle(IDLE_MSGS);
+buildReels(); sizeReels(); buildBulbs(); renderBoard(); render(); msgCycle(IDLE_MSGS());
 addEventListener('resize',()=>{ sizeReels(); buildBulbs(); clearWins(); });
 // the cabinet grows as the artwork loads, so keep the bulbs pinned to the painted ones
 if ('ResizeObserver' in window) new ResizeObserver(()=>buildBulbs()).observe($('cab'));

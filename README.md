@@ -19,10 +19,10 @@ An original 3-reel, 5-line classic slot game. Play money only: no real money and
 - Chasing marquee lights, synthesized sounds and music, and a spoken announcer.
 
 ## Odds
-The info tab shows the paytable and the exact odds, calculated from the reel weights:
-- About 55% of spins pay something.
-- Deal Round about 1 in 46 spins.
-- Payback 88.8% to 94.1%, depending on your offer choices.
+9 lines, pays in multiples of the total bet: three 2X coins 80×, three 7s 8×, triple bars 4×, double bars 2.5×, single bars 1×, any bars 0.5×, cherries 1× / 0.5× / 0.2×.
+- Deal Round about 1 in 39 spins, always 4 offers.
+- Payback 94.97% following best play (take the 1st offer above about 15.3× the bet, the 2nd above 13.8×, the 3rd above 11.6×).
+- The info tab shows every figure exactly, calculated from the reel weights.
 
 ## Artwork
 The images in `art/` were made by the owner with an AI image generator. Their painted checkerboard backgrounds were removed, and they were saved as transparent WebP files.
