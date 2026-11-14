@@ -9,7 +9,7 @@ An original 3-reel, 5-line classic slot game. Play money only: no real money and
   3. The first time, Android asks you to allow "Install unknown apps" for your browser.
   - Every push to GitHub builds a new version. A new version installs over the old one and keeps your balance.
 - **On a computer:** download `index.html` and open it in Chrome or Edge.
-- **In a browser:** turn on GitHub Pages (Settings, then Pages, then deploy from the `main` branch). The game then gets its own web address.
+- **In a browser:** https://rkode13.github.io/Double-Top-Dollar/ (published automatically on every push once GitHub Pages is turned on: the repository must be public, then Settings → Pages → Source: **GitHub Actions**).
 
 ## Features
 - 3 reels, 3 rows and 5 paylines, with cherries, bars, 7s and a **2X wild** (one doubles a win, two make it ×4).
