@@ -194,7 +194,9 @@ body{flex-direction:column;align-items:center}
 .board{margin-top:6px}
 .star{clip-path:none;background:none;width:clamp(56px,68.8px,72px);aspect-ratio:auto}
 .star img{display:block;width:100%;filter:drop-shadow(0 3px 3px #000a)}
-.star.lit{filter:drop-shadow(0 0 12px #ffd23f) drop-shadow(0 0 4px #fff)!important}
+.star.lit{filter:drop-shadow(0 0 14px #ffd23f) drop-shadow(0 0 6px #fff) brightness(1.2)!important;animation:starlit .5s ease-in-out infinite alternate;z-index:2;position:relative}
+@keyframes starlit{from{transform:scale(1.15) rotate(-6deg)}to{transform:scale(1.35) rotate(8deg)}}
+.star.lit::after{content:"";position:absolute;inset:-25%;border-radius:50%;background:radial-gradient(circle,#ffd23f99,transparent 65%);z-index:-1}
 .plaque{padding:0;border-radius:0;background:url(art/plaque.webp) center/100% 100% no-repeat;box-shadow:none;aspect-ratio:700/260;filter:drop-shadow(0 4px 4px #000a)}
 .plaque .v{position:absolute;left:13%;top:40%;width:73.9%;height:42.3%;margin:0;display:flex;align-items:center;justify-content:center;
   background:none;box-shadow:none;font-size:clamp(17px,24.08px,26px)}
@@ -376,13 +378,14 @@ const R3  = ['X2','B1','S7','B2','CH','B1','B3','B1','OF','B2','CH'];
 const WEIGHT = { X2:4, S7:5, B3:13, B2:18, B1:25.5, CH:19, BL:2, NX:1.5, OF:2 }; // virtual-reel weight per stop
 // Deal Round: each offer lights 1–5 board values and adds them up (× total bet);
 // then each 2X star may light, doubling it (both = ×4)
-const CELLS = [1,1.5,2,2.5,4,5,7.5,10], CELLW = [17,17,19,26,44,27,9,7];   // × total bet
+// (CELLS / CELLW follow the board order in SLOTS below; each stack is picked and counted on its own)
 const TOPV = 100, TOPW = 0.005;
-const PICKS = [[2,37],[3,88],[4,16],[5,4]];                    // [how many values light, weight]
-const MULTS = [[1,91],[2,8],[4,1]];                           // no star / one 2X star / both stars
+const PICKS = [[2,15],[3,160],[4,8]];                    // [how many values light, weight]
+const MULTS = [[1,75],[2,20],[4,5]];                           // no star / one 2X star / both stars
 const NOFFERS = [[4,1]];                                      // always 4 offers
 // the 3×3 board: [value, chip art]; 2× appears twice and both light together
-const SLOTS = [[2.5,'green'],[5,'red'],[2,'gold'],[4,'blue'],[1.5,'purple'],[1,'orange'],[7.5,'teal'],[10,'black'],[2,'pink']];
+const SLOTS = [[2.5,'green',100],[5,'red',12],[2,'gold',13],[4,'blue',90],[1.5,'purple',32],[1,'orange',40],[7.5,'teal',3],[10,'black',2.5],[2,'pink',13]]; // [× bet, art, weight]
+const CELLS = SLOTS.map(x=>x[0]), CELLW = SLOTS.map(x=>x[2]);
 const CHIPCOL = {green:['#18a957','#06502a'],red:['#d62030','#6a0610'],gold:['#d4a400','#6b5200'],blue:['#2a74e0','#0c3478'],purple:['#9b4dff','#4a1a8a'],
                  orange:['#e8742a','#7a3300'],teal:['#12b5a8','#055a53'],black:['#262626','#000'],pink:['#e03a9a','#701046']};
 const BETS = [10,20,30,50,100,150,200,300,500,1000,2000,3000];  // cents
@@ -455,11 +458,12 @@ function pickW(n, wfn){ let tot=0; for (let i=0;i<n;i++) tot+=wfn(i); let r=rand
 const pickStop = r => pickW(NSTOP, i => WEIGHT[STRIPS[r][i]]);
 function pickOffer(){ // which values light up (1–5 of them, no repeats) and the multiplier
   const k = PICKS[pickW(PICKS.length, i => PICKS[i][1])][0];
-  const left = BVALS.map((v,i)=>i), vals = [];
-  for (let j=0;j<k;j++){ const t = pickW(left.length, i => BW[left[i]]); vals.push(BVALS[left[t]]); left.splice(t,1); }
+  const left = BVALS.map((v,i)=>i), idx = [];
+  for (let j=0;j<k;j++){ const t = pickW(left.length, i => BW[left[i]]); idx.push(left[t]); left.splice(t,1); }
+  const vals = idx.map(i=>BVALS[i]);
   const mult = MULTS[pickW(MULTS.length, i => MULTS[i][1])][0];
   const sum = vals.reduce((a,b)=>a+b,0);
-  return { vals, sum, mult, x: Math.round(sum*mult*100)/100 };
+  return { idx, vals, sum, mult, x: Math.round(sum*mult*100)/100 };
 }
 
 /* =================================================================
@@ -721,8 +725,8 @@ function renderBoard(){
   const top=moneyShort(TOPV*G.bet), tv=$('tTop').querySelector('.v'); tv.textContent=top; tv.style.fontSize=top.length>6?'19px':'';
 }
 const moneyShort = c => c%100===0 ? '$'+(c/100).toLocaleString('en-US') : money(c);  // $160 instead of $160.00
-const tilesFor = v => v===TOPV ? [$('tTop')] : [...document.querySelectorAll(`#grid9 .chip[data-v="${v}"]`)];
-const lightV = (v,...cls) => tilesFor(v).forEach(t=>t.classList.add(...cls));
+const tileAt = i => i===CELLS.length ? $('tTop') : $('grid9').children[i];   // board position → element
+const lightI = (i,...cls) => tileAt(i).classList.add(...cls);
 
 async function rollup(amount, big){
   let shown=0, i=0, skip=false; rolling=()=>{skip=true}; render();
@@ -786,14 +790,14 @@ async function revealOffer(o, bet){
   // 1) the lights race around the board
   for (let f=0; f<18; f++){
     boardReset(); const n=1+Math.floor(rand()*4);
-    for (let j=0;j<n;j++) lightV(BVALS[Math.floor(rand()*BVALS.length)],'lit');
+    for (let j=0;j<n;j++) lightI(Math.floor(rand()*BVALS.length),'lit');
     SFX.shuffle(); await sleep(70+f*3);
   }
   boardReset(); await sleep(250);
   // 2) the chosen values light one at a time and add up
   let sum=0;
   for (let j=0;j<o.vals.length;j++){
-    const v=o.vals[j]; sum+=v; lightV(v,'lit'); SFX.chipLand(j);
+    const v=o.vals[j]; sum+=v; lightI(o.idx[j],'lit'); SFX.chipLand(j);
     msg(o.vals.slice(0,j+1).map(x=>money(Math.round(x*bet))).join(' + ') + (j>0?`<small>= ${money(Math.round(sum*bet))}</small>`:''));
     await sleep(560);
   }
@@ -827,7 +831,7 @@ async function dealRound(row){
   for (let i=0;i<n;i++){
     showDeck('none'); msg(i===n-1?'FINAL OFFER':ord[i]+' OFFER'); await sleep(700);
     const o=offers[i]; await revealOffer(o, bet);
-    msg(`${ord[i]} OFFER<br>${money(o.amt)}`,{money:o.mult>1});
+    msg(`${ord[i]} OFFER${o.mult>1?' ×'+o.mult:''}<br>${money(o.amt)}`,{money:o.mult>1});
     if (i===n-1){ say(`Final offer: ${spoken(o.amt)}. It's yours!`); took=i; await sleep(1500); break; }
     say(`${ord[i].toLowerCase()} offer: ${spoken(o.amt)}. Take it, or try again?`);
     await sleep(1100);
@@ -839,7 +843,7 @@ async function dealRound(row){
   }
   showDeck('none');
   const win=offers[took].amt;
-  boardReset(); offers[took].vals.forEach(v=>lightV(v,'lit','won'));
+  boardReset(); offers[took].idx.forEach(i=>lightI(i,'lit','won'));
   if (offers[took].mult>=2) $('mL').classList.add('lit'); if (offers[took].mult===4) $('mR').classList.add('lit');
   SFX.take(); flash(900); coins(16); lightMode='big';
   msg(`CONGRATULATIONS<br>YOU WIN ${money(win)}`,{money:true}); say(`Congratulations! You win ${spoken(win)}!`);
@@ -905,7 +909,7 @@ function drawSheet(){
       <p><b>An original game. Play money only — no real money, no prizes.</b></p>
       <p>${NLINES} lines are always played for your total bet of ${money(G.bet)}. Line wins pay left to right, and every win below is shown at your current bet. Wins on different lines add up.</p>
       <p>The <b>2X coin</b> is wild and stands in for every symbol except DEAL. One 2X in a line win doubles it; two multiply it by 4. Cherries count from the left reel.</p>
-      <p><b>DEAL</b> on any line of reel 3 starts the <b>Deal Round</b>: 4 offers. For each offer, 2 to 5 board values light up and are added together (${CELLS.map(v=>moneyShort(Math.round(v*G.bet))).join(', ')} and the ${moneyShort(TOPV*G.bet)} top offer at this bet). Each 2X star that lights doubles the offer; both stars make it ×4. Take it or try again; the 4th offer is final.</p>
+      <p><b>DEAL</b> on any line of reel 3 starts the <b>Deal Round</b>: 4 offers. For each offer, 2 to 5 board values light up and are added together (${[...new Set(CELLS)].sort((a,b)=>a-b).map(v=>moneyShort(Math.round(v*G.bet))).join(', ')} and the ${moneyShort(TOPV*G.bet)} top offer at this bet). Each 2X star that lights doubles the offer; both stars make it ×4. Take it or try again; the 4th offer is final.</p>
       <p><b>Best play:</b> take the 1st offer if it is more than ${money(Math.round(CONT[3]*G.bet))}, the 2nd if more than ${money(Math.round(CONT[2]*G.bet))}, the 3rd if more than ${money(Math.round(CONT[1]*G.bet))}. The "Best play says" hint follows this rule.</p>
       <table><tr><th>Line</th><th>Pays</th><th>How often*</th></tr>${rows.map(r=>`<tr><td>${r[0].map(mini).join('')}<br><span style="font-size:11px">${r[1]}</span></td><td>${money(Math.round(r[2]*G.bet))}</td><td>${ODDS.freq[r[1]]?oneIn(ODDS.freq[r[1]]):''}</td></tr>`).join('')}</table>
       <p class="note">*Spins with that win on at least one line (any multiplier).</p>
@@ -914,7 +918,7 @@ function drawSheet(){
         <tr><td>Deal Round</td><td>${oneIn(ODDS.bonus)} spins</td></tr>
         <tr><td>Triple 2X</td><td>${oneIn(ODDS.top)} spins</td></tr>
         <tr><td>Average offer</td><td>${ODDS.mean.toFixed(1)} × bet</td></tr>
-        <tr><td>Values lit per offer (2 • 3 • 4 • 5)</td><td>${PICKS.map(p=>Math.round(p[1]/PICKS.reduce((a,q)=>a+q[1],0)*100)+'%').join(' • ')}</td></tr>
+        <tr><td>Values lit per offer (${PICKS.map(p=>p[0]).join(' • ')})</td><td>${PICKS.map(p=>Math.round(p[1]/PICKS.reduce((a,q)=>a+q[1],0)*100)+'%').join(' • ')}</td></tr>
         <tr><td>Chance of 2X / both 2X</td><td>${MULTS[1][1]}% / ${MULTS[2][1]}%</td></tr>
         <tr><td>Payback if you always take the 1st offer</td><td>${pct(ODDS.rtpFirst)}</td></tr>
         <tr><td>Payback following "best play"</td><td>${pct(ODDS.rtpBest)}</td></tr></table>
