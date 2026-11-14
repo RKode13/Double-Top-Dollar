@@ -216,6 +216,30 @@ body{flex-direction:column;align-items:center}
 .console{width:min(460px,100vw);padding:10px 14px 12px;margin:0 0 16px;border-radius:0 0 26px 26px;
   background:linear-gradient(180deg,#24242c,#0b0b10);box-shadow:0 0 0 3px #c9c9d6,0 0 0 5px #4a4a56,0 14px 30px #000}
 .console .meters{margin-top:4px}
+/* neon "DEAL" under the gold logo */
+.logo{text-align:center}
+.logo img{width:auto;max-width:100%;max-height:8.6vh;margin:0 auto}
+.logo .neon{position:relative;margin-top:-1.6vh;font-family:AntonLocal,Anton,"Arial Black",sans-serif;font-size:clamp(24px,min(9vw,4.6vh),40px);
+  line-height:1;letter-spacing:.35em;padding-left:.35em;color:#eafff0;
+  text-shadow:0 0 2px #fff,0 0 6px #3cff8a,0 0 12px #19c95b,0 0 22px #19c95b,0 0 36px #19c95b;animation:neon 7s infinite}
+@keyframes neon{0%,91%,95%,100%{opacity:1}92%,94%{opacity:.35}93%{opacity:.85}}
+/* fit the whole machine on one phone screen */
+.cab{margin-top:0}
+:root{--chip:min(54px,14vw,6.1vh)}
+.grid9{row-gap:min(6px,.6vh)}
+.star{width:clamp(48px,min(16vw,7.6vh),72px)}
+.msgbar{height:clamp(38px,5vh,50px);margin-top:min(10px,1vh)}
+.reelbox{margin-top:min(10px,1vh)}
+.board{margin-top:min(6px,.6vh)}
+.console{padding:8px 14px 10px}
+.console .meters{margin-top:0}
+.meter .v{font-size:clamp(14px,min(4.6vw,2.3vh),20px);padding:3px 2px}
+.meter .lb{margin-top:3px}
+.controls{margin-top:4px}
+.spin{width:clamp(76px,10.5vh,104px);height:clamp(76px,10.5vh,104px)}
+.round{width:clamp(44px,6vh,56px);height:clamp(44px,6vh,56px)}
+.foot{margin-top:6px;font-size:10px}
+@media (max-height:940px){.foot{display:none}}
 </style>
 </head>
 <body>
@@ -235,7 +259,7 @@ body{flex-direction:column;align-items:center}
 
 <div class="cab" id="cab">
   <div class="bulbs" id="bulbs"></div>
-  <div class="logo"><img src="art/logo.webp" alt="Double Dollar Deal"></div>
+  <div class="logo"><img src="art/logo.webp" alt="Double Dollar"><div class="neon">DEAL</div></div>
 
   <div class="board" id="board">
     <div class="toprow">
@@ -549,7 +573,7 @@ function buildReels(){
 }
 function sizeReels(){
   const w=$('reels').getBoundingClientRect().width;
-  H=Math.max(50,Math.min(84,Math.floor((w-16)/3*.6))); document.documentElement.style.setProperty('--h',H+'px'); reels.forEach(drawReel);
+  H=Math.max(44,Math.min(84,Math.floor((w-16)/3*.6),Math.floor(innerHeight*.064))); document.documentElement.style.setProperty('--h',H+'px'); reels.forEach(drawReel);
   // line-number markers: left side at the line's first row, right side at its last row (nudged apart when they share a row)
   const used={};
   LINES.forEach((L,i)=>['l','r'].forEach(side=>{ const row=side==='l'?L[0]:L[2], key=side+row; const n=used[key]=(used[key]||0)+1;
@@ -634,9 +658,10 @@ function renderBoard(){
   const g=$('grid9'); g.innerHTML='';
   BOARD_ORDER.forEach(v=>{ const t=document.createElement('div'); t.className='chip'; t.dataset.v=v;
     t.style.setProperty('--c',CHIPCOL[v][0]); t.style.setProperty('--d',CHIPCOL[v][1]);
-    t.innerHTML=`<span class="v">${money(Math.round(v*G.bet))}</span>`; g.appendChild(t); });
-  $('tTop').querySelector('.v').textContent=money(TOPV*G.bet);
+    const txt=moneyShort(Math.round(v*G.bet)); t.innerHTML=`<span class="v" style="font-size:calc(var(--chip)*${txt.length<=4?.28:txt.length===5?.24:.2})">${txt}</span>`; g.appendChild(t); });
+  const top=moneyShort(TOPV*G.bet), tv=$('tTop').querySelector('.v'); tv.textContent=top; tv.style.fontSize=top.length>6?'clamp(14px,4.4vw,21px)':'';
 }
+const moneyShort = c => c%100===0 ? '$'+(c/100).toLocaleString('en-US') : money(c);  // $160 instead of $160.00
 const tileFor = v => v===TOPV ? $('tTop') : document.querySelector(`#grid9 .chip[data-v="${v}"]`);
 
 async function rollup(amount, big){
@@ -802,6 +827,7 @@ function drawSheet(){
       [['CH','CH','CH'],'THREE CHERRIES',PAY.C3],[['CH','CH'],'TWO CHERRIES',PAY.C2],[['CH'],'CHERRY',PAY.C1],[['X2','X2'],'TWO 2X',PAY.W2]];
     const ret=G.wagered?pct(G.won/G.wagered):'—';
     body.innerHTML=`<h2>PAYTABLE & ODDS</h2>
+      <p><b>An original game. Play money only — no real money, no prizes.</b></p>
       <p>${NLINES} lines are always played. Your total bet ${money(G.bet)} is split ${lb} per line. Line pays below are at your current bet.</p>
       <p><b>2X</b> is wild: one 2X doubles a line win, two multiply it by 4. Cherries pay from the left reel.</p>
       <p><b>DEAL</b> anywhere on reel 3 starts the <b>Deal Round</b> with 3, 4 or 5 offers. For each offer, 1 to 5 values on the board light up and are added together. Then each 2X star that lights doubles the offer (both stars = ×4). Take it or try again; the last offer is final. "Best play" shows the choice that pays the most on average.</p>
