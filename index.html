@@ -240,6 +240,11 @@ body{flex-direction:column;align-items:center}
 .round{width:clamp(44px,6vh,56px);height:clamp(44px,6vh,56px)}
 .foot{margin-top:6px;font-size:10px}
 @media (max-height:940px){.foot{display:none}}
+/* artwork chips */
+.chip{background:var(--img) center/100% 100% no-repeat;box-shadow:0 3px 0 #0006,0 6px 8px #000a}
+.chip::before{display:none}
+.chip .v{font-family:AntonLocal,Anton,"Arial Black",sans-serif}
+.chip.lit{box-shadow:0 3px 0 #0006,0 0 0 3px #fff,0 0 18px 6px var(--c)}
 </style>
 </head>
 <body>
@@ -341,6 +346,7 @@ const NOFFERS = [[3,30],[4,50],[5,20]];
 const BOARD_ORDER = [3,8,2, 4,1.5,1, 6,10,5];                 // where each value sits on the 3×3 board
 const CHIPCOL = {1:['#e8742a','#7a3300'],1.5:['#9b4dff','#4a1a8a'],2:['#d4a400','#6b5200'],3:['#18a957','#06502a'],4:['#2a74e0','#0c3478'],
                  5:['#e03a9a','#701046'],6:['#12b5a8','#055a53'],8:['#d62030','#6a0610'],10:['#262626','#000']};
+const CHIPIMG = {1:'orange',1.5:'purple',2:'gold',3:'green',4:'blue',5:'pink',6:'teal',8:'red',10:'black'};
 const BETS = [10,20,30,50,100,150,200,300,500,1000,2000,3000];  // cents
 const COINS = 10;
 
@@ -657,7 +663,7 @@ function render(){
 function renderBoard(){
   const g=$('grid9'); g.innerHTML='';
   BOARD_ORDER.forEach(v=>{ const t=document.createElement('div'); t.className='chip'; t.dataset.v=v;
-    t.style.setProperty('--c',CHIPCOL[v][0]); t.style.setProperty('--d',CHIPCOL[v][1]);
+    t.style.setProperty('--c',CHIPCOL[v][0]); t.style.setProperty('--d',CHIPCOL[v][1]); t.style.setProperty('--img',`url(art/chip_${CHIPIMG[v]}.webp)`);
     const txt=moneyShort(Math.round(v*G.bet)); t.innerHTML=`<span class="v" style="font-size:calc(var(--chip)*${txt.length<=4?.28:txt.length===5?.24:.2})">${txt}</span>`; g.appendChild(t); });
   const top=moneyShort(TOPV*G.bet), tv=$('tTop').querySelector('.v'); tv.textContent=top; tv.style.fontSize=top.length>6?'clamp(14px,4.4vw,21px)':'';
 }
