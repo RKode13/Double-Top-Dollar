@@ -350,6 +350,7 @@ body{display:block}
       <button data-tab="bet" title="Bet">🪙</button>
       <button data-tab="auto" title="Auto spin">↻</button>
       <button data-tab="sound" title="Sound">🔊</button>
+      <button data-tab="luck" title="Luck">🍀</button>
       <button data-tab="info" title="Paytable and odds">ℹ</button>
       <button class="x" id="sClose" aria-label="Close">✕</button>
     </div>
@@ -444,7 +445,7 @@ function computeOdds(){
   }
   const nw = NOFFERS.reduce((a,n)=>a+n[1],0);
   const best = NOFFERS.reduce((a,n)=>a+CONT[n[0]]*n[1],0)/nw;
-  return { line, hit, bonus, top, freq, mean:CONT[1], best, rtpFirst: line+bonus*CONT[1], rtpBest: line+bonus*best };
+  return { line, hit, bonus, top, freq, mean:CONT[1], best, bestBonus:best, rtpFirst: line+bonus*CONT[1], rtpBest: line+bonus*best };
 }
 
 /* ---------- RNG ---------- */
@@ -591,7 +592,8 @@ const IDLE_MSGS = () => ['GOOD LUCK',
   `TOP OFFER<br>${moneyShort(TOPV*G.bet)}`,
   'ONE 2X DOUBLES<small>TWO 2X QUADRUPLES</small>',
   '4 OFFERS EVERY DEAL ROUND<small>TAKE ONE OR TRY AGAIN</small>',
-  `${NLINES} LINES ALWAYS PLAYED`];
+  `${NLINES} LINES ALWAYS PLAYED`,
+  ...(LUCK[G.luck||0].cap ? [`${LUCK[G.luck].name} MODE<small>DEAL ROUND WITHIN ${LUCK[G.luck].cap-(G.sinceDeal||0)} SPINS</small>`] : [])];
 
 /* =================================================================
    SYMBOLS (vector art, shaded with the shared gradients above)
@@ -695,7 +697,9 @@ async function cycleWins(wins){
    ================================================================= */
 function $(id){ return document.getElementById(id); }
 const STORE='ddd.v2';
-let G={ bal:10000, bet:50, spins:0, wagered:0, won:0, deals:0, dealWon:0, best:0 };
+let G={ bal:10000, bet:50, spins:0, wagered:0, won:0, deals:0, dealWon:0, best:0, luck:0, sinceDeal:0 };
+// Luck modes: a Deal Round is guaranteed within this many spins of the last one (0 = normal odds)
+const LUCK = [{name:'NORMAL',cap:0},{name:'LUCKY',cap:50},{name:'VERY LUCKY',cap:25}];
 try{ Object.assign(G, JSON.parse(localStorage.getItem(STORE)||'{}')); }catch(e){}
 try{ Object.assign(S, JSON.parse(localStorage.getItem(STORE+'.snd')||'{}')); }catch(e){}
 function save(){ try{ localStorage.setItem(STORE,JSON.stringify(G));
@@ -738,6 +742,11 @@ async function spin(){
   G.bal-=G.bet; G.spins++; G.wagered+=G.bet; save();
   $('mWin').innerHTML='&nbsp;'; msg('GOOD LUCK'); lightMode='spin'; render(); SFX.button();
   const stops=(window.__force&&window.__force.shift())||[0,1,2].map(pickStop); // __force: test hook
+  const cap=LUCK[G.luck||0].cap;
+  if (cap && G.sinceDeal+1>=cap && !windowAt(2,stops[2]).includes('OF')){
+    const ofs=STRIPS[2].map((x,i)=>x==='OF'?i:-1).filter(i=>i>=0);
+    stops[2]=(ofs[Math.floor(rand()*ofs.length)]+[-1,0,1][Math.floor(rand()*3)]+NSTOP)%NSTOP;
+  }
   const w0=windowAt(0,stops[0]), w1=windowAt(1,stops[1]);
   const tease=LINES.some(L=>w0[L[0]]==='X2'&&w1[L[1]]==='X2');
   await spinReels(stops, tease); spinningNow=false;
@@ -756,6 +765,7 @@ async function spin(){
     document.querySelectorAll('.box').forEach(e=>e.remove());
   }
   save();
+  G.sinceDeal = res.dealRow>=0 ? 0 : (G.sinceDeal||0)+1; save();
   if (res.dealRow>=0){ showWinsToken++; await sleep(500); await dealRound(res.dealRow); }
   else if (res.total>0){ cycleWins(res.wins); }
   else msg(G.bal<G.bet?'OUT OF MONEY — TAP + FOR MORE':'GOOD LUCK');
@@ -870,6 +880,15 @@ function drawSheet(){
     foot.innerHTML=`<button class="gray" id="fReset">RESET SETTINGS</button><button id="fStart">START</button>`;
     $('fReset').onclick=()=>{ pendAuto=0; drawSheet(); };
     $('fStart').onclick=()=>{ if(!pendAuto) return; autoLeft=pendAuto; closeSheet(); render(); spin(); };
+  } else if (tab==='luck'){
+    const p=ODDS.bonus, rate=c=>c?p/(1-Math.pow(1-p,c)):p;      // Deal Rounds per spin with a guarantee
+    const pay=c=>ODDS.line+rate(c)*ODDS.bestBonus;
+    body.innerHTML=`<h2>LUCK SETTINGS</h2><div class="chips">${LUCK.map((l,i)=>`<button data-luck="${i}" class="${i===(G.luck||0)?'on':''}">${l.name}</button>`).join('')}</div>
+      <table style="margin-top:14px"><tr><th>Mode</th><th>Deal Round</th><th>Average</th><th>Payback*</th></tr>
+      ${LUCK.map(l=>`<tr><td>${l.name}</td><td>${l.cap?'at least every '+l.cap+' spins':'normal odds'}</td><td>1 in ${Math.round(1/rate(l.cap))}</td><td>${pct(pay(l.cap))}</td></tr>`).join('')}</table>
+      <p class="note">Lucky and Very Lucky guarantee a Deal Round within 50 or 25 spins of the last one. If none has come up naturally by then, the next spin brings one. ${LUCK[G.luck||0].cap?`Spins since the last Deal Round: <b>${G.sinceDeal||0}</b>.`:''}</p>
+      <p class="note">*Following best play. Over 100% means you win money over time — only possible because this is play money.</p>`;
+    foot.innerHTML=`<button id="fOk">OK</button>`; $('fOk').onclick=closeSheet;
   } else if (tab==='sound'){
     body.innerHTML=`<h2>SETTINGS</h2>
       <div class="sline">ALL SOUND ${tog('all')}</div><div class="sline">MUSIC ${tog('music')}</div>
@@ -912,6 +931,7 @@ $('sheet').addEventListener('click',e=>{
   if (t.dataset.tab){ tab=t.dataset.tab; drawSheet(); }
   else if (t.dataset.bet){ pendBet=+t.dataset.bet; drawSheet(); SFX.button(); }
   else if (t.dataset.auto){ pendAuto=+t.dataset.auto; drawSheet(); SFX.button(); }
+  else if (t.dataset.luck){ G.luck=+t.dataset.luck; save(); drawSheet(); SFX.button(); if(!busy) msgCycle(IDLE_MSGS()); }
   else if (t.dataset.tog){ const k=t.dataset.tog; S[k]=!S[k]; if((k==='all'||k==='voice')&&!S[k]) stopVoice();
     save(); drawSheet(); audio(); SFX.button(); if (k==='voice'&&S.voice) say('Voice on!'); }
 });
