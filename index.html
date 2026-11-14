@@ -359,6 +359,7 @@ body{display:block}
 </div>
 
 <div class="flash" id="flash"></div>
+<div id="safeProbe" style="position:fixed;visibility:hidden;padding-bottom:env(safe-area-inset-bottom,0px)"></div>
 
 <script>
 "use strict";
@@ -931,14 +932,19 @@ document.addEventListener('keydown',e=>{
 
 buildReels(); sizeReels(); buildBulbs(); renderBoard(); render(); msgCycle(IDLE_MSGS());
 function fitScreen(){
-  const m=$('machine'), vw=window.visualViewport?visualViewport.width:innerWidth, vh=window.visualViewport?visualViewport.height:innerHeight;
-  const f=Math.min(vw/430, vh/m.offsetHeight, 1.6); document.documentElement.style.setProperty('--fit',f.toFixed(4));
+  // use the smallest reported height (browser bars and the phone's own button bar take part of the screen)
+  const m=$('machine'), de=document.documentElement, vv=window.visualViewport;
+  const vw=Math.min(innerWidth, de.clientWidth||innerWidth, vv?vv.width:innerWidth);
+  const vh=Math.min(innerHeight, de.clientHeight||innerHeight, vv?vv.height:innerHeight);
+  const safe=parseFloat(getComputedStyle($('safeProbe')).paddingBottom)||0;
+  const f=Math.min(vw/430, (vh-safe-24)/m.offsetHeight, 1.6); de.style.setProperty('--fit',f.toFixed(4));
 }
 addEventListener('resize',()=>{ fitScreen(); });
 if (window.visualViewport) visualViewport.addEventListener('resize',fitScreen);
 // the cabinet grows as the artwork loads, so keep the bulbs pinned to the painted ones
 if ('ResizeObserver' in window) new ResizeObserver(()=>{ buildBulbs(); fitScreen(); }).observe($('machine'));
-addEventListener('load',()=>{ sizeReels(); buildBulbs(); fitScreen(); });
+addEventListener('load',()=>{ sizeReels(); buildBulbs(); fitScreen(); [300,1000,2500].forEach(t=>setTimeout(fitScreen,t)); });
+addEventListener('orientationchange',()=>setTimeout(fitScreen,400));
 // Android app hooks: Back closes the settings panel; leaving the app quiets the sound
 window.onAndroidBack = () => { if (!$('sheet').classList.contains('hide')){ closeSheet(); return true; } return false; };
 window.onAndroidPause = () => { autoLeft=0; render(); if (S.ctx) S.ctx.suspend(); };
