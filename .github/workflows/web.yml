@@ -21,7 +21,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Gather the game files
         run: |
@@ -31,7 +31,7 @@ jobs:
           curl -fsSL -o site/anton.woff2 https://cdn.jsdelivr.net/npm/@fontsource/anton@5.0.20/files/anton-latin-400-normal.woff2 || echo "font download failed; Google Fonts is used instead"
 
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: site
       - id: deployment
