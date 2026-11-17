@@ -842,7 +842,7 @@ async function dealRound(row){
   msg('DEAL ROUND!',{money:true}); await sleep(1400);
   $('board').classList.add('bonus'); boardReset();
   msg('PRESS BUTTON<br>TO START BONUS'); await waitGo();
-  msg(`YOU HAVE ${n} OFFERS<br>TAKE ONE!`); announce(n===4?['fouroffers']:[],`You have ${n} offers!`); await waitGo();
+  msg(`YOU HAVE ${n} OFFERS<br>TAKE ONE!`); announce(n===4?['fouroffers']:[],`You have ${n} offers!`,{queue:true}); await waitGo();
   const ord=['FIRST','SECOND','THIRD','FOURTH','FIFTH'];
   let took=-1;
   for (let i=0;i<n;i++){
@@ -863,13 +863,13 @@ async function dealRound(row){
   boardReset(); offers[took].idx.forEach(i=>lightI(i,'lit','won'));
   if (offers[took].mult>=2) $('mL').classList.add('lit'); if (offers[took].mult===4) $('mR').classList.add('lit');
   SFX.take(); flash(900); coins(16); lightMode='big';
-  msg(`CONGRATULATIONS<br>YOU WIN ${money(win)}`,{money:true}); announce(['winner'],`Boy, you're a winner! You win ${spoken(win)}!`);
+  msg(`CONGRATULATIONS<br>YOU WIN ${money(win)}`,{money:true}); announce(['winner'],`Boy, you're a winner! You win ${spoken(win)}!`,{queue:true});
   G.won+=win; G.dealWon+=win; G.best=Math.max(G.best,win);
   await rollup(win,true); save(); await sleep(1500);
   const later=offers.slice(took+1);
   if (later.length){ const b=Math.max(...later.map(o=>o.amt));
     msg(`${b>win?'NEXT OFFERS WERE':'SMART DEAL!'}<br>${later.map(o=>money(o.amt)).join(' • ')}`);
-    if (b>win){ SFX.aww(); announce(['soclose'],'Ooh, so close!'); } else announce(['smartdeal'],'Smart deal!'); await sleep(2400); }
+    if (b>win){ SFX.aww(); announce(['soclose'],'Ooh, so close!',{queue:true}); } else announce(['smartdeal'],'Smart deal!',{queue:true}); await sleep(2400); }
   $('board').classList.remove('bonus'); boardReset(); musicStart(false);
   const tag=document.createElement('div'); tag.className='dealtag'; tag.innerHTML=`<span>${money(win)}</span>`;
   const b={left:reels[2].el.offsetLeft,width:reels[2].el.offsetWidth}, hb={left:0};
