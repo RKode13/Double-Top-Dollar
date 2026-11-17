@@ -469,7 +469,7 @@ function pickOffer(){ // which values light up (1–5 of them, no repeats) and t
 /* =================================================================
    SOUND — synthesized live with Web Audio; voice uses the device's speech
    ================================================================= */
-const S = { ctx:null, sfxBus:null, musBus:null, all:true, music:true, sfx:true, voice:true };
+const S = { ctx:null, sfxBus:null, musBus:null, all:true, music:true, sfx:true, voice:true, voiceMode:'announcer' };
 function audio(){
   if (!S.ctx){ const AC = window.AudioContext||window.webkitAudioContext; if (!AC) return null;
     S.ctx = new AC(); const m = S.ctx.createGain(); m.gain.value=.6; m.connect(S.ctx.destination);
@@ -532,14 +532,30 @@ function chooseVoice(){ if (!('speechSynthesis' in window)) return;
   const vs=speechSynthesis.getVoices().filter(v=>/^en/i.test(v.lang)); if(!vs.length) return;
   voicePick = vs.find(v=>/david|guy|daniel|alex|fred|male|google us english/i.test(v.name)) || vs[0]; }
 if ('speechSynthesis' in window){ chooseVoice(); speechSynthesis.onvoiceschanged=chooseVoice; }
+/* Announcer: the owner's recorded clips (art/voice); the phone's speech is the fallback */
+const VO = {}; ['first','second','third','final','winner','dealtime','fouroffers','takeortry','lucky','herewego','lastchance','doubleit',
+  'doubleagain','topoffer','smartdeal','soclose','doubled','fourtimes','bigwinner','jackpot','tripledouble','voiceon']
+  .forEach(k=>{ try{ const a=new Audio(`art/voice/${k}.mp3`); a.preload='auto'; VO[k]=a; }catch(e){} });
+let voQueue=[], voNow=null;
+function voStop(){ voQueue=[]; if (voNow){ voNow.pause(); voNow.onended=null; voNow=null; } }
+function voNext(){ const k=voQueue.shift(); if (!k){ voNow=null; return; }
+  const a=VO[k]; voNow=a; a.currentTime=0; a.volume=.95; a.onended=voNext; a.play().catch(()=>voNext()); }
+// keys: recorded clips to play in order; text: what the phone voice says instead
+function announce(keys, text, opts){
+  if (!S.all || S.voiceMode==='off') return;
+  if (S.voiceMode==='announcer' && keys && keys.length && keys.every(k=>VO[k])){
+    if (opts && opts.queue && voNow){ voQueue.push(...keys); return; }   // wait for the clip that is playing
+    voStop(); if ('speechSynthesis' in window) speechSynthesis.cancel(); voQueue=[...keys]; voNext(); return; }
+  say(text, opts);
+}
 function say(text,{rate=1.05,pitch=.85}={}){
-  if (!S.all || !S.voice) return;
+  if (!S.all || S.voiceMode==='off') return;
   if (window.AndroidVoice){ AndroidVoice.speak(text); return; }   // Android app: phone's text-to-speech
   if (!('speechSynthesis' in window)) return;
   speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text);
   if (voicePick) u.voice=voicePick; u.rate=rate; u.pitch=pitch; speechSynthesis.speak(u);
 }
-function stopVoice(){ if (window.AndroidVoice) AndroidVoice.stop(); else if ('speechSynthesis' in window) speechSynthesis.cancel(); }
+function stopVoice(){ voStop(); if (window.AndroidVoice) AndroidVoice.stop(); else if ('speechSynthesis' in window) speechSynthesis.cancel(); }
 const sleep = ms => new Promise(r=>setTimeout(r,ms));
 const money = c => '$' + (c/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const spoken = c => { const d=Math.floor(c/100), k=c%100; return (d? d+' dollar'+(d===1?'':'s'):'') + (d&&k?' and ':'') + (k? k+' cents':'') || 'zero'; };
@@ -706,8 +722,9 @@ let G={ bal:10000, bet:50, spins:0, wagered:0, won:0, deals:0, dealWon:0, best:0
 const LUCK = [{name:'NORMAL',cap:0},{name:'LUCKY',cap:50},{name:'VERY LUCKY',cap:25}];
 try{ Object.assign(G, JSON.parse(localStorage.getItem(STORE)||'{}')); }catch(e){}
 try{ Object.assign(S, JSON.parse(localStorage.getItem(STORE+'.snd')||'{}')); }catch(e){}
+if (!['announcer','phone','off'].includes(S.voiceMode)) S.voiceMode = S.voice===false ? 'off' : 'announcer';
 function save(){ try{ localStorage.setItem(STORE,JSON.stringify(G));
-  localStorage.setItem(STORE+'.snd',JSON.stringify({all:S.all,music:S.music,sfx:S.sfx,voice:S.voice})); }catch(e){} }
+  localStorage.setItem(STORE+'.snd',JSON.stringify({all:S.all,music:S.music,sfx:S.sfx,voice:S.voice,voiceMode:S.voiceMode})); }catch(e){} }
 let busy=false, autoLeft=0, rolling=null, dealChoice=null, spinningNow=false;
 
 function render(){
@@ -761,9 +778,9 @@ async function spin(){
     medalsGlow(true); lightMode=big?'big':'win'; $('winamt').textContent=money(res.total); $('winamt').classList.add('on');
     res.wins.forEach(w=>drawLine(w.line,true,true));
     msg(res.wins.length===1 ? `${res.wins[0].name}${res.wins[0].m>1?' ×'+res.wins[0].m:''} — ${money(res.total)}` : `${res.wins.length} LINES WIN ${money(res.total)}`, {money:big});
-    if (top){ flash(1200); SFX.bigWin(); say('Jackpot! Triple double!'); coins(40); }
-    else if (big){ flash(); SFX.bigWin(); say(res.wins.some(w=>w.m>1)?'Doubled up! Big winner!':'Big winner!'); coins(18); }
-    else { SFX.smallWin(); if (res.wins.some(w=>w.m===4)) say('Four times!',{rate:1.15}); else if (res.wins.some(w=>w.m===2&&w.x>=30)) say('Doubled!',{rate:1.15}); }
+    if (top){ flash(1200); SFX.bigWin(); announce(['jackpot','tripledouble'],'Jackpot! Triple double!'); coins(40); }
+    else if (big){ flash(); SFX.bigWin(); announce(['bigwinner'],'Big winner!'); coins(18); }
+    else { SFX.smallWin(); if (res.wins.some(w=>w.m===4)) announce(['fourtimes'],'Four times!',{rate:1.15}); else if (res.wins.some(w=>w.m===2)) announce(['doubled'],'Doubled!',{rate:1.15}); }
     await rollup(res.total, big);
     $('winamt').classList.remove('on');
     document.querySelectorAll('.box').forEach(e=>e.remove());
@@ -797,7 +814,7 @@ async function revealOffer(o, bet){
   // 2) the chosen values light one at a time and add up
   let sum=0;
   for (let j=0;j<o.vals.length;j++){
-    const v=o.vals[j]; sum+=v; lightI(o.idx[j],'lit'); SFX.chipLand(j);
+    const v=o.vals[j]; sum+=v; lightI(o.idx[j],'lit'); SFX.chipLand(j); if (o.idx[j]===CELLS.length) announce(['topoffer'],'Top offer!');
     msg(o.vals.slice(0,j+1).map(x=>money(Math.round(x*bet))).join(' + ') + (j>0?`<small>= ${money(Math.round(sum*bet))}</small>`:''));
     await sleep(560);
   }
@@ -811,7 +828,7 @@ async function revealOffer(o, bet){
     stars[s].classList.add('flick'); for (let k=0;k<(willLight?10:6);k++){ SFX.starTease(); await sleep(70); }
     stars[s].classList.remove('flick');
     if (!willLight){ await sleep(200); break; }
-    stars[s].classList.add('lit'); total*=2; SFX.multLit(); flash(300);
+    stars[s].classList.add('lit'); total*=2; SFX.multLit(); flash(300); announce([s===0?'doubleit':'doubleagain'], s===0?'Double it!':'Double it again!');
     msg(`${s===0?'2X':'2X AGAIN'}! ${money(total)}`,{money:true}); await sleep(800);
   }
   SFX.offerLand();
@@ -821,38 +838,38 @@ async function dealRound(row){
   G.deals++; const bet=G.bet;
   const n=NOFFERS[pickW(NOFFERS.length,k=>NOFFERS[k][1])][0];
   const offers=Array.from({length:n},()=>{ const o=pickOffer(); o.amt=Math.round(o.sum*bet)*o.mult; return o; });
-  lightMode='deal'; medalsGlow(true); flash(800); SFX.fanfare(); say("It's deal time!"); musicStart(true);
+  lightMode='deal'; medalsGlow(true); flash(800); SFX.fanfare(); announce(['dealtime'],"It's deal time!"); musicStart(true);
   msg('DEAL ROUND!',{money:true}); await sleep(1400);
   $('board').classList.add('bonus'); boardReset();
   msg('PRESS BUTTON<br>TO START BONUS'); await waitGo();
-  msg(`YOU HAVE ${n} OFFERS<br>TAKE ONE!`); say(`You have ${n} offers!`); await waitGo();
+  msg(`YOU HAVE ${n} OFFERS<br>TAKE ONE!`); announce(n===4?['fouroffers']:[],`You have ${n} offers!`); await waitGo();
   const ord=['FIRST','SECOND','THIRD','FOURTH','FIFTH'];
   let took=-1;
   for (let i=0;i<n;i++){
     showDeck('none'); msg(i===n-1?'FINAL OFFER':ord[i]+' OFFER'); await sleep(700);
     const o=offers[i]; await revealOffer(o, bet);
     msg(`${ord[i]} OFFER${o.mult>1?' ×'+o.mult:''}<br>${money(o.amt)}`,{money:o.mult>1});
-    if (i===n-1){ say(`Final offer: ${spoken(o.amt)}. It's yours!`); took=i; await sleep(1500); break; }
-    say(`${ord[i].toLowerCase()} offer: ${spoken(o.amt)}. Take it, or try again?`);
+    if (i===n-1){ announce(['final'],`Final offer: ${spoken(o.amt)}. It's yours!`,{queue:true}); took=i; await sleep(1500); break; }
+    announce([['first','second','third'][i],'takeortry'],`${ord[i].toLowerCase()} offer: ${spoken(o.amt)}. Take it, or try again?`,{queue:true});
     await sleep(1100);
     const advice = o.x >= CONT[n-1-i] ? 'TAKE OFFER' : 'TRY AGAIN';
     msgHint(advice);
     const ch=await waitChoice(advice);
     if (ch==='take'){ took=i; break; }
-    SFX.button(); say(['Feeling lucky!','Here we go again!','Let\'s see the next one!','Last chance!'][Math.min(i,3)],{rate:1.15});
+    SFX.button(); announce([['lucky','herewego','lastchance'][Math.min(i,2)]],['Feeling lucky!','Here we go again!','Last chance!'][Math.min(i,2)],{rate:1.15});
   }
   showDeck('none');
   const win=offers[took].amt;
   boardReset(); offers[took].idx.forEach(i=>lightI(i,'lit','won'));
   if (offers[took].mult>=2) $('mL').classList.add('lit'); if (offers[took].mult===4) $('mR').classList.add('lit');
   SFX.take(); flash(900); coins(16); lightMode='big';
-  msg(`CONGRATULATIONS<br>YOU WIN ${money(win)}`,{money:true}); say(`Congratulations! You win ${spoken(win)}!`);
+  msg(`CONGRATULATIONS<br>YOU WIN ${money(win)}`,{money:true}); announce(['winner'],`Boy, you're a winner! You win ${spoken(win)}!`);
   G.won+=win; G.dealWon+=win; G.best=Math.max(G.best,win);
   await rollup(win,true); save(); await sleep(1500);
   const later=offers.slice(took+1);
   if (later.length){ const b=Math.max(...later.map(o=>o.amt));
     msg(`${b>win?'NEXT OFFERS WERE':'SMART DEAL!'}<br>${later.map(o=>money(o.amt)).join(' • ')}`);
-    if (b>win) SFX.aww(); await sleep(2400); }
+    if (b>win){ SFX.aww(); announce(['soclose'],'Ooh, so close!'); } else announce(['smartdeal'],'Smart deal!'); await sleep(2400); }
   $('board').classList.remove('bonus'); boardReset(); musicStart(false);
   const tag=document.createElement('div'); tag.className='dealtag'; tag.innerHTML=`<span>${money(win)}</span>`;
   const b={left:reels[2].el.offsetLeft,width:reels[2].el.offsetWidth}, hb={left:0};
@@ -896,8 +913,10 @@ function drawSheet(){
   } else if (tab==='sound'){
     body.innerHTML=`<h2>SETTINGS</h2>
       <div class="sline">ALL SOUND ${tog('all')}</div><div class="sline">MUSIC ${tog('music')}</div>
-      <div class="sline">SOUND EFFECTS ${tog('sfx')}</div><div class="sline">VOICE ${tog('voice')}</div>
-      <p class="note">The voice uses your device's built-in speech, so it sounds different on different phones.</p>`;
+      <div class="sline">SOUND EFFECTS ${tog('sfx')}</div>
+      <div class="sline" style="border:none">VOICE</div>
+      <div class="chips">${[['announcer','ANNOUNCER'],['phone','PHONE VOICE'],['off','OFF']].map(([k,l])=>`<button data-vmode="${k}" class="${S.voiceMode===k?'on':''}">${l}</button>`).join('')}</div>
+      <p class="note">Announcer plays the recorded voice. Phone voice uses your device's built-in speech, which can also say the dollar amounts.</p>`;
     foot.innerHTML=`<button id="fOk">OK</button>`; $('fOk').onclick=closeSheet;
   } else {
     const mini=s=>`<span class="mini">${SYM[s]}</span>`;
@@ -935,6 +954,7 @@ $('sheet').addEventListener('click',e=>{
   if (t.dataset.tab){ tab=t.dataset.tab; drawSheet(); }
   else if (t.dataset.bet){ pendBet=+t.dataset.bet; drawSheet(); SFX.button(); }
   else if (t.dataset.auto){ pendAuto=+t.dataset.auto; drawSheet(); SFX.button(); }
+  else if (t.dataset.vmode){ S.voiceMode=t.dataset.vmode; if (S.voiceMode==='off') stopVoice(); save(); drawSheet(); audio(); announce(['voiceon'],'Voice on!'); }
   else if (t.dataset.luck){ G.luck=+t.dataset.luck; save(); drawSheet(); SFX.button(); if(!busy) msgCycle(IDLE_MSGS()); }
   else if (t.dataset.tog){ const k=t.dataset.tog; S[k]=!S[k]; if((k==='all'||k==='voice')&&!S[k]) stopVoice();
     save(); drawSheet(); audio(); SFX.button(); if (k==='voice'&&S.voice) say('Voice on!'); }
@@ -971,7 +991,7 @@ addEventListener('load',()=>{ sizeReels(); buildBulbs(); fitScreen(); [300,1000,
 addEventListener('orientationchange',()=>setTimeout(fitScreen,400));
 // Android app hooks: Back closes the settings panel; leaving the app quiets the sound
 window.onAndroidBack = () => { if (!$('sheet').classList.contains('hide')){ closeSheet(); return true; } return false; };
-window.onAndroidPause = () => { autoLeft=0; render(); if (S.ctx) S.ctx.suspend(); };
+window.onAndroidPause = () => { autoLeft=0; render(); voStop(); if (S.ctx) S.ctx.suspend(); };
 document.addEventListener('visibilitychange', () => { if (!document.hidden && S.ctx) S.ctx.resume(); });
 </script>
 </body>

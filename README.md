@@ -28,3 +28,8 @@ An original 3-reel, 5-line classic slot game. Play money only: no real money and
 The images in `art/` were made by the owner with an AI image generator. Their painted checkerboard backgrounds were removed, and they were saved as transparent WebP files.
 - The cabinet and the reel frame are drawn as stretchable frames (CSS `border-image`).
 - The cabinet's painted light bulbs are animated with glowing dots placed on top of them.
+
+## Announcer voice
+`art/voice/` holds 22 announcer clips the owner recorded with ElevenLabs.
+- Choose Announcer, Phone voice or Off in Settings → 🔊.
+- With Phone voice, the device's own speech says the lines, including dollar amounts.
